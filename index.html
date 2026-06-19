@@ -221,6 +221,12 @@
     let editingId = null;
     let currentQuality = '';
 
+    const formatDate = (dateValue) => {
+      if (!dateValue) return '';
+      if (typeof dateValue === 'string' && dateValue.includes('-')) return dateValue;
+      return dateValue;
+    };
+
     const toNorwegianDate = (dateString) => {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -260,7 +266,7 @@
             name: row.c[0]?.v || '',
             url: row.c[1]?.v || '',
             wineType: row.c[2]?.v || '',
-            dateTasted: row.c[3]?.v || '',
+            dateTasted: formatDate(row.c[3]?.v) || '',
             country: row.c[4]?.v || '',
             region: row.c[5]?.v || '',
             subRegion: row.c[6]?.v || '',
@@ -292,7 +298,7 @@
       const type = document.getElementById('filterType').value;
       const quality = document.getElementById('filterQuality').value;
       const country = document.getElementById('filterCountry').value;
-      const sort = document.getElementById('sortBy').value;
+      const sort = document.getElementById('sortBy').value || 'newest';
       
       let filtered = wines.filter(w => {
         const matchSearch = Object.values(w).some(v => String(v).toLowerCase().includes(search));
@@ -346,6 +352,7 @@
           link.target = '_blank';
           link.style.textDecoration = 'none';
           link.textContent = '🔗';
+          link.onclick = (e) => e.stopPropagation();
           buttonsDiv.appendChild(link);
         }
         
@@ -353,14 +360,14 @@
         editBtn.className = 'btn-primary';
         editBtn.style.padding = '0.25rem 0.5rem';
         editBtn.textContent = '✎';
-        editBtn.onclick = (e) => editWine(e, w.id);
+        editBtn.onclick = (e) => { e.stopPropagation(); editWine(e, w.id); };
         buttonsDiv.appendChild(editBtn);
         
         const delBtn = document.createElement('button');
         delBtn.className = 'btn-secondary';
         delBtn.style.padding = '0.25rem 0.5rem';
         delBtn.textContent = '✕';
-        delBtn.onclick = (e) => deleteWine(e, w.id);
+        delBtn.onclick = (e) => { e.stopPropagation(); deleteWine(e, w.id); };
         buttonsDiv.appendChild(delBtn);
         
         actionDiv.appendChild(starsSpan);
@@ -369,7 +376,12 @@
         card.appendChild(nameDiv);
         card.appendChild(metaDiv);
         card.appendChild(actionDiv);
-        card.onclick = () => selectWine(w.id);
+        
+        card.onclick = (e) => {
+          if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
+            selectWine(w.id);
+          }
+        };
         
         list.appendChild(card);
       });
