@@ -315,9 +315,11 @@ function App() {
                 <div key={w.id} className="wine-card" onClick={() => { setSelectedWine(w); setShowDetails(true); }}>
                   <div className="wine-name">{w.name}</div>
                   <div className="wine-meta">
-                    {w.wineType && <span>{w.wineType} · </span>}
+                    {w.wineType && <span>{w.wineType}</span>}
                     {w.country && <span>{w.country}</span>}
-                    {w.dateTasted && <span> · {toNorwegianDate(w.dateTasted)}</span>}
+                    {w.region && <span style={{color: '#9ca3af'}}>{w.region}</span>}
+                    {w.subRegion && <span style={{color: '#d1d5db'}}>{w.subRegion}</span>}
+                    {w.dateTasted && <span style={{marginLeft: '0.5rem'}}>{toNorwegianDate(w.dateTasted)}</span>}
                   </div>
                   <div className="wine-footer">
                     {w.quality && <div className="wine-quality">{renderStars(w.quality)}</div>}
@@ -335,9 +337,85 @@ function App() {
       )}
 
       {view === 'stats' && (
-        <div className="stats-box">
-          <div className="stats-number">{wines.length}</div>
-          <div className="stats-label">Totalt viner i samlingen</div>
+        <div>
+          <div className="stats-box" style={{marginBottom: '1.5rem'}}>
+            <div className="stats-number">{wines.length}</div>
+            <div className="stats-label">Totalt viner i samlingen</div>
+          </div>
+
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem'}}>
+            <div className="stats-box">
+              <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Etter land</h3>
+              {(() => {
+                const countryStats = {};
+                wines.forEach(w => {
+                  if (w.country) {
+                    countryStats[w.country] = (countryStats[w.country] || 0) + 1;
+                  }
+                });
+                return Object.entries(countryStats).sort((a, b) => b[1] - a[1]).map(([country, count]) => (
+                  <div key={country} style={{display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem'}}>
+                    <span>{country}</span>
+                    <span style={{fontWeight: '600'}}>{count}</span>
+                  </div>
+                ));
+              })()}
+            </div>
+
+            <div className="stats-box">
+              <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Etter type vin</h3>
+              {(() => {
+                const typeStats = {};
+                wines.forEach(w => {
+                  if (w.wineType) {
+                    typeStats[w.wineType] = (typeStats[w.wineType] || 0) + 1;
+                  }
+                });
+                return Object.entries(typeStats).sort((a, b) => b[1] - a[1]).map(([type, count]) => (
+                  <div key={type} style={{display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem'}}>
+                    <span>{type}</span>
+                    <span style={{fontWeight: '600'}}>{count}</span>
+                  </div>
+                ));
+              })()}
+            </div>
+
+            <div className="stats-box">
+              <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Etter kvalitet</h3>
+              {(() => {
+                const qualityStats = {};
+                wines.forEach(w => {
+                  if (w.quality) {
+                    qualityStats[w.quality] = (qualityStats[w.quality] || 0) + 1;
+                  }
+                });
+                return Object.entries(qualityStats).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])).map(([quality, count]) => (
+                  <div key={quality} style={{display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem'}}>
+                    <span>{renderStars(quality)}</span>
+                    <span style={{fontWeight: '600'}}>{count}</span>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+
+          <div className="stats-box" style={{marginTop: '1.5rem'}}>
+            <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Top regioner</h3>
+            {(() => {
+              const regionStats = {};
+              wines.forEach(w => {
+                if (w.region) {
+                  regionStats[w.region] = (regionStats[w.region] || 0) + 1;
+                }
+              });
+              return Object.entries(regionStats).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([region, count]) => (
+                <div key={region} style={{display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem'}}>
+                  <span>{region}</span>
+                  <span style={{fontWeight: '600'}}>{count}</span>
+                </div>
+              ));
+            })()}
+          </div>
         </div>
       )}
 
@@ -353,8 +431,40 @@ function App() {
               {selectedWine.dateTasted && <p><strong>Dato:</strong> {toNorwegianDate(selectedWine.dateTasted)}</p>}
               {selectedWine.country && <p><strong>Land:</strong> {selectedWine.country}</p>}
               {selectedWine.region && <p><strong>Region:</strong> {selectedWine.region}</p>}
+              {selectedWine.subRegion && <p><strong>Underregion:</strong> {selectedWine.subRegion}</p>}
               {selectedWine.grapes && <p><strong>Druer:</strong> {selectedWine.grapes}</p>}
-              {selectedWine.quality && <p><strong>Kvalitet:</strong> {renderStars(selectedWine.quality)}</p>}
+              
+              {(selectedWine.sightClarity || selectedWine.sightIntensity || selectedWine.sightColor) && (
+                <div style={{marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb'}}>
+                  <h4 style={{fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem'}}>Utseende</h4>
+                  {selectedWine.sightClarity && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Klarhet:</strong> {selectedWine.sightClarity}</p>}
+                  {selectedWine.sightIntensity && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Intensitet:</strong> {selectedWine.sightIntensity}</p>}
+                  {selectedWine.sightColor && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Farge:</strong> {selectedWine.sightColor}</p>}
+                </div>
+              )}
+              
+              {(selectedWine.noseCondition || selectedWine.noseIntensity || selectedWine.noseAroma) && (
+                <div style={{marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb'}}>
+                  <h4 style={{fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem'}}>Duft</h4>
+                  {selectedWine.noseCondition && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Tilstand:</strong> {selectedWine.noseCondition}</p>}
+                  {selectedWine.noseIntensity && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Intensitet:</strong> {selectedWine.noseIntensity}</p>}
+                  {selectedWine.noseAroma && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Aroma:</strong> {selectedWine.noseAroma}</p>}
+                </div>
+              )}
+              
+              {(selectedWine.sweetness || selectedWine.acid || selectedWine.tannin || selectedWine.body || selectedWine.taste || selectedWine.length) && (
+                <div style={{marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb'}}>
+                  <h4 style={{fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem'}}>Smak</h4>
+                  {selectedWine.sweetness && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Sødme:</strong> {selectedWine.sweetness}</p>}
+                  {selectedWine.acid && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Syrlighet:</strong> {selectedWine.acid}</p>}
+                  {selectedWine.tannin && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Tannin:</strong> {selectedWine.tannin}</p>}
+                  {selectedWine.body && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Kropp:</strong> {selectedWine.body}</p>}
+                  {selectedWine.taste && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Smak:</strong> {selectedWine.taste}</p>}
+                  {selectedWine.length && <p style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}><strong>Lengde:</strong> {selectedWine.length}</p>}
+                </div>
+              )}
+              
+              {selectedWine.quality && <p style={{marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb'}}><strong>Kvalitet:</strong> {renderStars(selectedWine.quality)}</p>}
             </div>
             <div className="modal-footer">
               <button onClick={() => { if (checkPassword()) { setForm(selectedWine); setEditId(selectedWine.id); setShowDetails(false); setShowForm(true); } }} className="btn-primary">Rediger</button>
@@ -398,9 +508,66 @@ function App() {
                 <input type="text" value={form.country} onChange={(e) => setForm(p => ({ ...p, country: e.target.value }))} />
               </div>
               <div className="form-group">
+                <label className="form-label">Region</label>
+                <input type="text" value={form.region} onChange={(e) => setForm(p => ({ ...p, region: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Underregion</label>
+                <input type="text" value={form.subRegion} onChange={(e) => setForm(p => ({ ...p, subRegion: e.target.value }))} />
+              </div>
+              <div className="form-group">
                 <label className="form-label">Druer</label>
                 <input type="text" value={form.grapes} onChange={(e) => setForm(p => ({ ...p, grapes: e.target.value }))} />
               </div>
+
+              <h3 style={{fontSize: '0.875rem', fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem'}}>Utseende</h3>
+              <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem'}}>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <input type="text" placeholder="Klarhet" value={form.sightClarity} onChange={(e) => setForm(p => ({ ...p, sightClarity: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <input type="text" placeholder="Intensitet" value={form.sightIntensity} onChange={(e) => setForm(p => ({ ...p, sightIntensity: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <input type="text" placeholder="Farge" value={form.sightColor} onChange={(e) => setForm(p => ({ ...p, sightColor: e.target.value }))} />
+                </div>
+              </div>
+
+              <h3 style={{fontSize: '0.875rem', fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem'}}>Duft</h3>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem'}}>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <input type="text" placeholder="Tilstand" value={form.noseCondition} onChange={(e) => setForm(p => ({ ...p, noseCondition: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <input type="text" placeholder="Intensitet" value={form.noseIntensity} onChange={(e) => setForm(p => ({ ...p, noseIntensity: e.target.value }))} />
+                </div>
+              </div>
+              <div className="form-group">
+                <input type="text" placeholder="Aroma" value={form.noseAroma} onChange={(e) => setForm(p => ({ ...p, noseAroma: e.target.value }))} />
+              </div>
+
+              <h3 style={{fontSize: '0.875rem', fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem'}}>Smak</h3>
+              <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem'}}>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <input type="text" placeholder="Sødme" value={form.sweetness} onChange={(e) => setForm(p => ({ ...p, sweetness: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <input type="text" placeholder="Syrlighet" value={form.acid} onChange={(e) => setForm(p => ({ ...p, acid: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <input type="text" placeholder="Tannin" value={form.tannin} onChange={(e) => setForm(p => ({ ...p, tannin: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <input type="text" placeholder="Kropp" value={form.body} onChange={(e) => setForm(p => ({ ...p, body: e.target.value }))} />
+                </div>
+              </div>
+              <div className="form-group">
+                <input type="text" placeholder="Smak" value={form.taste} onChange={(e) => setForm(p => ({ ...p, taste: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <input type="text" placeholder="Lengde" value={form.length} onChange={(e) => setForm(p => ({ ...p, length: e.target.value }))} />
+              </div>
+
               <div className="form-group">
                 <label className="form-label">Kvalitet</label>
                 <div className="stars">
