@@ -12,103 +12,36 @@
       min-height: 100vh; 
       padding: 1rem;
     }
-    .debug { position: fixed; bottom: 1rem; right: 1rem; background: white; border: 2px solid red; padding: 1rem; max-width: 300px; font-size: 0.75rem; max-height: 200px; overflow-y: auto; z-index: 9999; }
+    .debug { position: fixed; bottom: 1rem; right: 1rem; background: white; border: 2px solid red; padding: 0.5rem; max-width: 250px; font-size: 0.65rem; max-height: 150px; overflow-y: auto; z-index: 9999; }
     .container { max-width: 80rem; margin: 0 auto; }
-    .card { 
-      background: white; 
-      border-radius: 0.5rem; 
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-      padding: 1rem; 
-      margin-bottom: 1rem;
-    }
+    .card { background: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 1rem; margin-bottom: 1rem; }
     h1 { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; }
-    h2 { font-size: 1.1rem; font-weight: bold; margin: 1rem 0 0.5rem; }
-    button { 
-      padding: 0.5rem 1rem; 
-      border: none; 
-      border-radius: 0.375rem; 
-      cursor: pointer; 
-      font-size: 0.875rem; 
-      transition: all 0.2s;
-      font-family: inherit;
-    }
+    button { padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; font-family: inherit; }
     .btn-primary { background: #374151; color: white; }
-    .btn-secondary { background: #6b7280; color: white; }
     .btn-gray { background: #d1d5db; color: #374151; }
-    input, select { 
-      width: 100%; 
-      padding: 0.5rem; 
-      border: 1px solid #d1d5db; 
-      border-radius: 0.375rem; 
-      font-size: 0.875rem;
-      font-family: inherit;
-      margin-bottom: 0.5rem;
-    }
+    .btn-blue { background: #2563eb; color: white; }
+    input, select { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: inherit; margin-bottom: 0.5rem; }
     .flex { display: flex; gap: 0.5rem; align-items: center; }
     .flex-between { display: flex; justify-content: space-between; align-items: center; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+    .space-y > * + * { margin-top: 0.5rem; }
     .hidden { display: none !important; }
-    .modal { 
-      position: fixed; 
-      inset: 0; 
-      background: rgba(0,0,0,0.5); 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      z-index: 50; 
-      padding: 1rem;
-      overflow: auto;
-    }
-    .modal-content { 
-      background: white; 
-      border-radius: 0.5rem; 
-      max-width: 40rem; 
-      width: 100%;
-      box-shadow: 0 20px 25px rgba(0,0,0,0.15);
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    .modal-header { 
-      padding: 1rem; 
-      border-bottom: 1px solid #e5e7eb; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center;
-    }
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; overflow: auto; }
+    .modal-content { background: white; border-radius: 0.5rem; max-width: 40rem; width: 100%; box-shadow: 0 20px 25px rgba(0,0,0,0.15); overflow-y: auto; }
+    .modal-header { padding: 1rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
     .modal-body { padding: 1rem; }
-    .modal-footer { 
-      padding: 1rem; 
-      border-top: 1px solid #e5e7eb; 
-      display: flex; 
-      gap: 0.5rem; 
-      flex-direction: column;
-    }
-    .wine-card { 
-      background: white; 
-      border: 1px solid #e5e7eb;
-      border-radius: 0.5rem; 
-      padding: 1rem; 
-      cursor: pointer; 
-      transition: all 0.2s;
-      margin-bottom: 0.5rem;
-    }
+    .modal-footer { padding: 1rem; border-top: 1px solid #e5e7eb; display: flex; gap: 0.5rem; flex-direction: column; }
+    .wine-card { background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; cursor: pointer; transition: all 0.2s; margin-bottom: 0.5rem; }
     .wine-card:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
     .wine-name { font-weight: bold; margin-bottom: 0.25rem; }
     .wine-meta { font-size: 0.75rem; color: #6b7280; }
-    .tab-btn { 
-      padding: 0.5rem 1rem; 
-      border: none; 
-      cursor: pointer; 
-      border-radius: 0.375rem;
-      font-family: inherit;
-    }
-    .tab-active { background: #374151; color: white; }
+    .stars { font-weight: bold; }
   </style>
 </head>
 <body>
   <div id="debug" class="debug">
-    <strong>DEBUG LOG:</strong>
-    <div id="debugLog"></div>
+    <strong>DEBUG:</strong>
+    <div id="debugLog" style="font-size: 0.6rem;"></div>
   </div>
 
   <div class="container">
@@ -117,23 +50,47 @@
         <h1>🗂 Vinkartotek</h1>
         <div class="flex">
           <button class="btn-primary" id="addBtn">+</button>
-          <button class="btn-secondary" id="refreshBtn">↻</button>
+          <button class="btn-primary" id="refreshBtn">↻</button>
         </div>
       </div>
       
-      <div id="wineList"></div>
+      <div class="space-y" style="margin-bottom: 1rem;">
+        <input type="text" id="searchInput" placeholder="Søk..." />
+        <div class="grid-3">
+          <select id="filterType">
+            <option value="">Alle typer</option>
+            <option value="Rødvin">Rødvin</option>
+            <option value="Hvitvin">Hvitvin</option>
+            <option value="Rosévin">Rosévin</option>
+          </select>
+          <select id="filterQuality">
+            <option value="">Alle stjerner</option>
+          </select>
+          <select id="sortBy">
+            <option value="newest">Nyeste først</option>
+            <option value="quality">Kvalitet</option>
+          </select>
+        </div>
+        <select id="filterCountry">
+          <option value="">Alle land</option>
+        </select>
+        <button class="btn-gray" id="resetBtn">Nullstill</button>
+      </div>
     </div>
+
+    <div id="wineList"></div>
   </div>
 
-  <!-- Details Modal -->
   <div id="detailsModal" class="modal hidden">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="detailsName">Test</h2>
+        <h2 id="detailsName"></h2>
         <button style="background: none; border: none; font-size: 1.5rem; cursor: pointer;" id="closeDetailsBtn">×</button>
       </div>
-      <div class="modal-body" id="detailsBody">
-        <p>Test content</p>
+      <div class="modal-body" id="detailsBody"></div>
+      <div class="modal-footer">
+        <button class="btn-blue" id="editBtn">✎ Rediger</button>
+        <button class="btn-gray">Lukk</button>
       </div>
     </div>
   </div>
@@ -141,16 +98,17 @@
   <script>
     const SHEET_ID = '1QagDAoCbeuAneC0H37PhIVncqUxIslH8lrchBgyfhnA';
     let wines = [];
+    let selectedWine = null;
 
     function debug(msg) {
       const log = document.getElementById('debugLog');
       const line = document.createElement('div');
-      line.textContent = new Date().toLocaleTimeString() + ': ' + msg;
+      line.textContent = msg;
       log.appendChild(line);
-      console.log(msg);
+      if (log.children.length > 10) log.removeChild(log.firstChild);
     }
 
-    debug('Page loaded');
+    debug('Started');
 
     const formatDate = (dateValue) => {
       if (!dateValue) return '';
@@ -169,44 +127,79 @@
     };
 
     const loadData = async () => {
-      debug('loadData() called');
+      debug('Loading data...');
       try {
         const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
-        debug('Fetch completed, status: ' + r.status);
-        
-        if (!r.ok) {
-          throw new Error('HTTP ' + r.status);
-        }
-        
         const t = await r.text();
-        debug('Got text: ' + t.length + ' chars');
-        
         const j = JSON.parse(t.substring(47).slice(0, -2));
-        debug('Parsed JSON');
         
-        wines = j.table.rows.map((row, i) => ({
-          id: i + 1,
-          name: row.c[0]?.v || '',
-          wineType: row.c[2]?.v || '',
-          dateTasted: formatDate(row.c[3]?.v) || '',
-          country: row.c[4]?.v || '',
-          quality: row.c[20]?.v || ''
-        }));
+        wines = j.table.rows.map((row, i) => {
+          let qualityValue = '';
+          if (row.c[20]?.v !== null && row.c[20]?.v !== undefined) {
+            qualityValue = String(row.c[20].v);
+            if (qualityValue.startsWith("'")) qualityValue = qualityValue.substring(1);
+          }
+          return {
+            id: i + 1,
+            name: row.c[0]?.v || '',
+            url: row.c[1]?.v || '',
+            wineType: row.c[2]?.v || '',
+            dateTasted: formatDate(row.c[3]?.v) || '',
+            country: row.c[4]?.v || '',
+            grapes: row.c[7]?.v || '',
+            quality: qualityValue
+          };
+        });
         
         debug('Loaded ' + wines.length + ' wines');
+        updateFilters();
         render();
       } catch (e) {
-        debug('ERROR: ' + e.message);
-        alert('Feil: ' + e.message);
+        debug('Error: ' + e.message);
       }
     };
 
+    const updateFilters = () => {
+      const qualities = [...new Set(wines.map(w => w.quality).filter(Boolean))].sort((a, b) => parseFloat(b) - parseFloat(a));
+      const countries = [...new Set(wines.map(w => w.country).filter(Boolean))].sort();
+      
+      document.getElementById('filterQuality').innerHTML = '<option value="">Alle stjerner</option>' + 
+        qualities.map(q => `<option value="${q}">${q}★</option>`).join('');
+      
+      document.getElementById('filterCountry').innerHTML = '<option value="">Alle land</option>' + 
+        countries.map(c => `<option value="${c}">${c}</option>`).join('');
+    };
+
     const render = () => {
-      debug('render() called');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const type = document.getElementById('filterType').value;
+      const quality = document.getElementById('filterQuality').value;
+      const country = document.getElementById('filterCountry').value;
+      const sort = document.getElementById('sortBy').value || 'newest';
+      
+      let filtered = wines.filter(w => {
+        const matchSearch = Object.values(w).some(v => String(v).toLowerCase().includes(search));
+        const matchType = !type || w.wineType === type;
+        const matchQuality = !quality || w.quality === quality;
+        const matchCountry = !country || w.country === country;
+        return matchSearch && matchType && matchQuality && matchCountry;
+      });
+
+      if (sort === 'newest') {
+        filtered.sort((a, b) => {
+          const dateA = new Date(a.dateTasted || 0);
+          const dateB = new Date(b.dateTasted || 0);
+          if (dateB.getTime() !== dateA.getTime()) return dateB - dateA;
+          return b.id - a.id;
+        });
+      } else if (sort === 'quality') {
+        filtered.sort((a, b) => parseFloat(b.quality || 0) - parseFloat(a.quality || 0));
+      }
+
       const list = document.getElementById('wineList');
       list.innerHTML = '';
       
-      wines.forEach(w => {
+      filtered.forEach(w => {
         const card = document.createElement('div');
         card.className = 'wine-card';
         
@@ -218,39 +211,70 @@
         metaDiv.className = 'wine-meta';
         metaDiv.textContent = `${w.wineType} · ${w.country} · ${toNorwegianDate(w.dateTasted)}`;
         
+        const actionDiv = document.createElement('div');
+        actionDiv.className = 'flex-between';
+        actionDiv.style.marginTop = '0.5rem';
+        
+        const starsSpan = document.createElement('span');
+        starsSpan.className = 'stars';
+        starsSpan.textContent = w.quality ? w.quality + '★' : '';
+        
+        actionDiv.appendChild(starsSpan);
+        
+        if (w.url) {
+          const link = document.createElement('a');
+          link.href = w.url;
+          link.target = '_blank';
+          link.textContent = '🔗';
+          link.style.textDecoration = 'none';
+          actionDiv.appendChild(link);
+        }
+        
         card.appendChild(nameDiv);
         card.appendChild(metaDiv);
+        card.appendChild(actionDiv);
         
         card.onclick = () => {
-          debug('Card clicked: ' + w.id);
-          const modal = document.getElementById('detailsModal');
+          selectedWine = w;
           document.getElementById('detailsName').textContent = w.name;
-          document.getElementById('detailsBody').textContent = `${w.wineType} · ${w.country}`;
-          modal.classList.remove('hidden');
-          debug('Modal should be visible now');
+          
+          const body = document.getElementById('detailsBody');
+          body.innerHTML = '';
+          if (w.wineType) body.innerHTML += `<p><strong>Type:</strong> ${w.wineType}</p>`;
+          if (w.country) body.innerHTML += `<p><strong>Land:</strong> ${w.country}</p>`;
+          if (w.grapes) body.innerHTML += `<p><strong>Druer:</strong> ${w.grapes}</p>`;
+          if (w.quality) body.innerHTML += `<p><strong>Kvalitet:</strong> ${w.quality}★</p>`;
+          
+          document.getElementById('detailsModal').classList.remove('hidden');
         };
         
         list.appendChild(card);
       });
-      debug('render() complete, ' + wines.length + ' cards created');
     };
 
-    debug('Attaching event listeners');
+    // Event listeners
     document.getElementById('closeDetailsBtn').addEventListener('click', () => {
-      debug('Close button clicked');
       document.getElementById('detailsModal').classList.add('hidden');
     });
 
-    document.getElementById('addBtn').addEventListener('click', () => {
-      debug('Add button clicked');
+    document.getElementById('searchInput').addEventListener('input', render);
+    document.getElementById('filterType').addEventListener('change', render);
+    document.getElementById('filterQuality').addEventListener('change', render);
+    document.getElementById('sortBy').addEventListener('change', render);
+    document.getElementById('filterCountry').addEventListener('change', render);
+    
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterType').value = '';
+      document.getElementById('filterQuality').value = '';
+      document.getElementById('filterCountry').value = '';
+      document.getElementById('sortBy').value = 'newest';
+      render();
     });
 
-    document.getElementById('refreshBtn').addEventListener('click', () => {
-      debug('Refresh button clicked');
-      loadData();
-    });
+    document.getElementById('refreshBtn').addEventListener('click', loadData);
+    document.getElementById('addBtn').addEventListener('click', () => debug('Add clicked'));
 
-    debug('Event listeners attached, calling loadData()');
     loadData();
   </script>
 </body>
