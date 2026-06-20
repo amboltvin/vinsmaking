@@ -4,11 +4,67 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vinkartotek</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-body { background: linear-gradient(135deg, #faf5f0 0%, #f3f4f6 100%); }
-.wine-card { cursor: pointer; }
-.wine-card:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.1) !important; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+  background: linear-gradient(135deg, #faf5f0 0%, #f3f4f6 100%);
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+#root { max-width: 80rem; margin: 0 auto; }
+.header { background: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 1.5rem; }
+.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.header-top h1 { font-size: 1.875rem; margin: 0; }
+.button-group { display: flex; gap: 0.5rem; }
+button { 
+  padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; 
+  font-size: 0.875rem; font-family: inherit; transition: all 0.2s;
+}
+.btn-primary { background: #374151; color: white; }
+.btn-primary:hover { background: #1f2937; }
+.btn-secondary { background: #d1d5db; color: #374151; }
+.btn-secondary:hover { background: #9ca3af; }
+.btn-light { background: #f3f4f6; color: #374151; }
+.btn-light:hover { background: #e5e7eb; }
+.btn-danger { background: #dc2626; color: white; }
+.btn-danger:hover { background: #b91c1c; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.tab-btn { padding: 0.5rem 1rem; border: none; background: #d1d5db; color: #374151; cursor: pointer; border-radius: 0.375rem; }
+.tab-btn.active { background: #374151; color: white; }
+.filters { display: flex; flex-direction: column; gap: 0.75rem; }
+select, input[type="text"], input[type="url"], input[type="date"] {
+  padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; 
+  font-size: 0.875rem; font-family: inherit; width: 100%;
+}
+select:focus, input:focus { outline: none; border-color: #2563eb; }
+.filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+.wine-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.wine-card { 
+  background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; 
+  padding: 1rem; cursor: pointer; transition: box-shadow 0.2s;
+}
+.wine-card:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+.wine-name { font-weight: bold; font-size: 1rem; margin-bottom: 0.25rem; }
+.wine-meta { font-size: 0.75rem; color: #6b7280; margin-bottom: 0.75rem; }
+.wine-footer { display: flex; justify-content: space-between; align-items: center; }
+.wine-quality { font-weight: bold; }
+.wine-actions { display: flex; gap: 0.5rem; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 50; padding: 1rem; overflow-y: auto; }
+.modal.open { display: flex; }
+.modal-content { background: white; border-radius: 0.5rem; max-width: 40rem; width: 100%; box-shadow: 0 20px 25px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
+.modal-header { padding: 1rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h2 { font-size: 1.25rem; margin: 0; }
+.close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
+.modal-body { padding: 1rem; }
+.modal-footer { padding: 1rem; border-top: 1px solid #e5e7eb; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.form-group { margin-bottom: 0.75rem; }
+.form-label { display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem; color: #374151; }
+.stars { font-size: 1.5rem; cursor: pointer; }
+.stats-box { background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.stats-number { font-size: 2rem; font-weight: bold; color: #374151; }
+.stats-label { color: #6b7280; font-size: 0.875rem; }
 </style>
 </head>
 <body>
@@ -47,6 +103,17 @@ const toNorwegianDate = (dateString) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
   return `${day}.${month}.${year}`;
+};
+
+const renderStars = (quality) => {
+  const cr = parseFloat(quality) || 0;
+  let stars = '';
+  for (let i = 1; i <= 5; i++) {
+    if (cr >= i) stars += '★';
+    else if (cr >= i - 0.5) stars += '½';
+    else stars += '☆';
+  }
+  return stars;
 };
 
 function App() {
@@ -193,169 +260,170 @@ function App() {
   });
 
   return (
-    <div className="py-5">
-      <div className="container">
-        <div className="card mb-4">
-          <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h1 className="mb-0">🗂 Vinkartotek</h1>
-              <div className="d-flex gap-2">
-                <button onClick={() => { if (checkPassword()) setShowForm(true); }} className="btn btn-dark btn-sm">+</button>
-                <button onClick={() => { loadData(); }} disabled={loading} className="btn btn-secondary btn-sm">{loading ? '⟳' : '↻'}</button>
-              </div>
-            </div>
-
-            <div className="d-flex gap-2 mb-4">
-              <button onClick={() => setView('list')} className={`btn btn-sm ${view === 'list' ? 'btn-dark' : 'btn-light'}`}>Utforsk</button>
-              <button onClick={() => setView('stats')} className={`btn btn-sm ${view === 'stats' ? 'btn-dark' : 'btn-light'}`}>Statistikk</button>
-            </div>
-
-            {view === 'list' && (
-              <div className="mb-4">
-                <input type="text" placeholder="Søk..." value={search} onChange={(e) => setSearch(e.target.value)} className="form-control form-control-sm mb-3" />
-                <div className="row g-2 mb-3">
-                  <div className="col-md-4">
-                    <select value={filterWineType} onChange={(e) => setFilterWineType(e.target.value)} className="form-select form-select-sm">
-                      <option value="">Alle typer</option>
-                      <option value="Rødvin">Rødvin</option>
-                      <option value="Hvitvin">Hvitvin</option>
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <select value={filterQuality} onChange={(e) => setFilterQuality(e.target.value)} className="form-select form-select-sm">
-                      <option value="">Alle stjerner</option>
-                      {uniqueQualities.map(q => <option key={q} value={q}>{q}★</option>)}
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="form-select form-select-sm">
-                      <option value="newest">Nyeste først</option>
-                      <option value="quality">Kvalitet</option>
-                    </select>
-                  </div>
-                </div>
-                <select value={filterCountry} onChange={(e) => { setFilterCountry(e.target.value); }} className="form-select form-select-sm mb-3">
-                  <option value="">Alle land</option>
-                  {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <button onClick={() => { setSearch(''); setFilterWineType(''); setFilterQuality(''); setFilterCountry(''); setSortBy('newest'); }} className="btn btn-light btn-sm">Nullstill</button>
-              </div>
-            )}
-
-            {view === 'stats' && (
-              <div>
-                <p className="h5">{wines.length} viner i samlingen</p>
-              </div>
-            )}
+    <div>
+      <div className="header">
+        <div className="header-top">
+          <h1>🗂 Vinkartotek</h1>
+          <div className="button-group">
+            <button onClick={() => { if (checkPassword()) setShowForm(true); }} className="btn-primary">+</button>
+            <button onClick={() => { loadData(); }} disabled={loading} className="btn-secondary">{loading ? '⟳' : '↻'}</button>
           </div>
         </div>
 
+        <div className="tabs">
+          <button className={`tab-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>Utforsk</button>
+          <button className={`tab-btn ${view === 'stats' ? 'active' : ''}`} onClick={() => setView('stats')}>Statistikk</button>
+        </div>
+
         {view === 'list' && (
-          <div>
-            <div className="text-center mb-3 text-muted">{sorted.length} viner</div>
-            {sorted.length === 0 ? (
-              <div className="alert alert-info">Ingen viner matcher søket</div>
-            ) : (
-              sorted.map(w => (
-                <div key={w.id} className="card wine-card mb-3 p-3" onClick={() => { setSelectedWine(w); setShowDetails(true); }}>
-                  <h5 className="mb-2">{w.name}</h5>
-                  <div className="small text-muted mb-2">
+          <div className="filters">
+            <input type="text" placeholder="Søk..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <div className="filter-row">
+              <select value={filterWineType} onChange={(e) => setFilterWineType(e.target.value)}>
+                <option value="">Alle typer</option>
+                <option value="Rødvin">Rødvin</option>
+                <option value="Hvitvin">Hvitvin</option>
+                <option value="Rosévin">Rosévin</option>
+              </select>
+              <select value={filterQuality} onChange={(e) => setFilterQuality(e.target.value)}>
+                <option value="">Alle stjerner</option>
+                {uniqueQualities.map(q => <option key={q} value={q}>{q}★</option>)}
+              </select>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <option value="newest">Nyeste først</option>
+                <option value="quality">Kvalitet</option>
+                <option value="country">Land</option>
+              </select>
+            </div>
+            <select value={filterCountry} onChange={(e) => setFilterCountry(e.target.value)}>
+              <option value="">Alle land</option>
+              {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <button onClick={() => { setSearch(''); setFilterWineType(''); setFilterQuality(''); setFilterCountry(''); setSortBy('newest'); }} className="btn-light">Nullstill</button>
+          </div>
+        )}
+      </div>
+
+      {view === 'list' && (
+        <div>
+          <div style={{textAlign: 'center', color: '#6b7280', marginBottom: '1rem'}}>{sorted.length} viner</div>
+          {sorted.length === 0 ? (
+            <div style={{background: 'white', padding: '2rem', borderRadius: '0.5rem', textAlign: 'center', color: '#6b7280'}}>Ingen viner matcher søket</div>
+          ) : (
+            <div className="wine-list">
+              {sorted.map(w => (
+                <div key={w.id} className="wine-card" onClick={() => { setSelectedWine(w); setShowDetails(true); }}>
+                  <div className="wine-name">{w.name}</div>
+                  <div className="wine-meta">
                     {w.wineType && <span>{w.wineType} · </span>}
                     {w.country && <span>{w.country}</span>}
                     {w.dateTasted && <span> · {toNorwegianDate(w.dateTasted)}</span>}
                   </div>
-                  <div className="d-flex justify-content-between align-items-center">
-                    {w.quality && <span className="fw-bold">{w.quality}★</span>}
-                    <div className="d-flex gap-2">
-                      {w.url && <a href={w.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>🔗</a>}
-                      <button onClick={(e) => { e.stopPropagation(); if (checkPassword()) { setForm(w); setEditId(w.id); setShowForm(true); } }} className="btn btn-sm btn-dark">✎</button>
-                      <button onClick={(e) => { e.stopPropagation(); del(w.id); }} className="btn btn-sm btn-secondary">✕</button>
+                  <div className="wine-footer">
+                    {w.quality && <div className="wine-quality">{renderStars(w.quality)}</div>}
+                    <div className="wine-actions">
+                      {w.url && <a href={w.url} target="_blank" rel="noreferrer" style={{textDecoration: 'none'}} onClick={(e) => e.stopPropagation()}>🔗</a>}
+                      <button onClick={(e) => { e.stopPropagation(); if (checkPassword()) { setForm(w); setEditId(w.id); setShowForm(true); } }} className="btn-primary">✎</button>
+                      <button onClick={(e) => { e.stopPropagation(); del(w.id); }} className="btn-danger">✕</button>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-        {showDetails && selectedWine && (
-          <div className="modal d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-            <div className="modal-dialog modal-lg modal-dialog-scrollable">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">{selectedWine.name}</h5>
-                  <button type="button" className="btn-close" onClick={() => { setShowDetails(false); setSelectedWine(null); }}></button>
-                </div>
-                <div className="modal-body">
-                  {selectedWine.wineType && <p><strong>Type:</strong> {selectedWine.wineType}</p>}
-                  {selectedWine.dateTasted && <p><strong>Dato:</strong> {toNorwegianDate(selectedWine.dateTasted)}</p>}
-                  {selectedWine.country && <p><strong>Land:</strong> {selectedWine.country}</p>}
-                  {selectedWine.quality && <p><strong>Kvalitet:</strong> {selectedWine.quality}★</p>}
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-primary btn-sm" onClick={() => { if (checkPassword()) { setForm(selectedWine); setEditId(selectedWine.id); setShowDetails(false); setShowForm(true); } }}>Rediger</button>
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setShowDetails(false); setSelectedWine(null); }}>Lukk</button>
+      {view === 'stats' && (
+        <div className="stats-box">
+          <div className="stats-number">{wines.length}</div>
+          <div className="stats-label">Totalt viner i samlingen</div>
+        </div>
+      )}
+
+      {showDetails && selectedWine && (
+        <div className="modal open">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>{selectedWine.name}</h2>
+              <button className="close-btn" onClick={() => { setShowDetails(false); setSelectedWine(null); }}>×</button>
+            </div>
+            <div className="modal-body">
+              {selectedWine.wineType && <p><strong>Type:</strong> {selectedWine.wineType}</p>}
+              {selectedWine.dateTasted && <p><strong>Dato:</strong> {toNorwegianDate(selectedWine.dateTasted)}</p>}
+              {selectedWine.country && <p><strong>Land:</strong> {selectedWine.country}</p>}
+              {selectedWine.region && <p><strong>Region:</strong> {selectedWine.region}</p>}
+              {selectedWine.grapes && <p><strong>Druer:</strong> {selectedWine.grapes}</p>}
+              {selectedWine.quality && <p><strong>Kvalitet:</strong> {renderStars(selectedWine.quality)}</p>}
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => { if (checkPassword()) { setForm(selectedWine); setEditId(selectedWine.id); setShowDetails(false); setShowForm(true); } }} className="btn-primary">Rediger</button>
+              <button onClick={() => { setShowDetails(false); setSelectedWine(null); }} className="btn-secondary">Lukk</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="modal open">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>{editId ? 'Rediger vin' : 'Ny vin'}</h2>
+              <button className="close-btn" onClick={() => { setShowForm(false); setEditId(null); }}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Vinnavn *</label>
+                <input type="text" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">URL</label>
+                <input type="url" value={form.url} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Type vin</label>
+                <select value={form.wineType} onChange={(e) => setForm(p => ({ ...p, wineType: e.target.value }))}>
+                  <option value="">Velg type</option>
+                  <option value="Rødvin">Rødvin</option>
+                  <option value="Hvitvin">Hvitvin</option>
+                  <option value="Rosévin">Rosévin</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Dato</label>
+                <input type="date" value={form.dateTasted} onChange={(e) => setForm(p => ({ ...p, dateTasted: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Land</label>
+                <input type="text" value={form.country} onChange={(e) => setForm(p => ({ ...p, country: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Druer</label>
+                <input type="text" value={form.grapes} onChange={(e) => setForm(p => ({ ...p, grapes: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Kvalitet</label>
+                <div className="stars">
+                  {[1,2,3,4,5].map(s => {
+                    const cr = parseFloat(form.quality) || 0;
+                    return <span key={s} onClick={() => setForm(p => ({ ...p, quality: (cr === s ? s - 0.5 : s).toString() }))} style={{marginRight: '0.25rem'}}>{cr >= s ? '★' : cr === s - 0.5 ? '½' : '☆'}</span>;
+                  })}
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {showForm && (
-          <div className="modal d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-            <div className="modal-dialog modal-lg modal-dialog-scrollable">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">{editId ? 'Rediger vin' : 'Ny vin'}</h5>
-                  <button type="button" className="btn-close" onClick={() => { setShowForm(false); setEditId(null); }}></button>
-                </div>
-                <div className="modal-body">
-                  <div className="mb-2">
-                    <input type="text" placeholder="Vinnavn *" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} className="form-control form-control-sm" />
-                  </div>
-                  <div className="mb-2">
-                    <input type="url" placeholder="URL" value={form.url} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} className="form-control form-control-sm" />
-                  </div>
-                  <div className="mb-2">
-                    <select value={form.wineType} onChange={(e) => setForm(p => ({ ...p, wineType: e.target.value }))} className="form-select form-select-sm">
-                      <option value="">Type vin</option>
-                      <option value="Rødvin">Rødvin</option>
-                      <option value="Hvitvin">Hvitvin</option>
-                      <option value="Rosévin">Rosévin</option>
-                    </select>
-                  </div>
-                  <div className="mb-2">
-                    <input type="date" value={form.dateTasted} onChange={(e) => setForm(p => ({ ...p, dateTasted: e.target.value }))} className="form-control form-control-sm" />
-                  </div>
-                  <div className="mb-2">
-                    <input type="text" placeholder="Land" value={form.country} onChange={(e) => setForm(p => ({ ...p, country: e.target.value }))} className="form-control form-control-sm" />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label small">Kvalitet</label>
-                    <div>
-                      {[1,2,3,4,5].map(s => {
-                        const cr = parseFloat(form.quality) || 0;
-                        return <span key={s} onClick={() => setForm(p => ({ ...p, quality: (cr === s ? s - 0.5 : s).toString() }))} style={{fontSize: '1.5rem', cursor: 'pointer', marginRight: '0.25rem'}}>{cr >= s ? '★' : cr === s - 0.5 ? '½' : '☆'}</span>;
-                      })}
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={saving}>{saving ? 'Lagrer...' : (editId ? 'Oppdater' : 'Legg til')}</button>
-                  {editId && <button type="button" className="btn btn-danger btn-sm" onClick={() => { setShowForm(false); setEditId(null); del(editId); }}>Slett</button>}
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setShowForm(false); setEditId(null); }}>Avbryt</button>
-                </div>
-              </div>
+            <div className="modal-footer">
+              <button onClick={save} disabled={saving} className="btn-primary">{saving ? 'Lagrer...' : (editId ? 'Oppdater' : 'Legg til')}</button>
+              {editId && <button onClick={() => { setShowForm(false); setEditId(null); del(editId); }} className="btn-danger">Slett</button>}
+              <button onClick={() => { setShowForm(false); setEditId(null); }} className="btn-secondary">Avbryt</button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
 
 ReactDOM.render(<App />, document.getElementById('root'));
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
