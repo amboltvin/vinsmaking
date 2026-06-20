@@ -514,14 +514,14 @@ function App() {
                 </div>
 
                 <StatBoxWithChart 
-                  title="Top 10 regioner" 
-                  data={regionStats}
+                  title={`Top 10 land ${statsCountryFilter ? '(filtrert)' : ''}`}
+                  data={statsCountryFilter ? { [statsCountryFilter]: countryStats[statsCountryFilter] || 0 } : countryStats}
                   colors={['#374151', '#2563eb', '#9333ea', '#dc2626', '#059669', '#f59e0b', '#0ea5e9', '#8b5cf6', '#ec4899', '#14b8a6']}
                 />
 
                 <StatBoxWithChart 
-                  title={`Top 10 land ${statsCountryFilter ? '(filtrert)' : ''}`}
-                  data={statsCountryFilter ? { [statsCountryFilter]: countryStats[statsCountryFilter] || 0 } : countryStats}
+                  title="Top 10 regioner" 
+                  data={regionStats}
                   colors={['#374151', '#2563eb', '#9333ea', '#dc2626', '#059669', '#f59e0b', '#0ea5e9', '#8b5cf6', '#ec4899', '#14b8a6']}
                 />
 
