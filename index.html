@@ -130,6 +130,8 @@ function App() {
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [statsCountryFilter, setStatsCountryFilter] = useState('');
+  const [statsRegionFilter, setStatsRegionFilter] = useState('');
   const [form, setForm] = useState({
     name: '', url: '', wineType: '', dateTasted: new Date().toISOString().split('T')[0],
     country: '', region: '', subRegion: '', grapes: '',
