@@ -349,8 +349,12 @@ function App() {
       {view === 'stats' && (
         <div>
           <div className="stats-box" style={{marginBottom: '1.5rem'}}>
-            <div className="stats-number">{wines.length}</div>
-            <div className="stats-label">Totalt viner i samlingen</div>
+            <div className="stats-number">{wines.filter(w => {
+              if (statsCountryFilter && w.country !== statsCountryFilter) return false;
+              if (statsRegionFilter && w.region !== statsRegionFilter) return false;
+              return true;
+            }).length}</div>
+            <div className="stats-label">Viner {statsCountryFilter ? `fra ${statsCountryFilter}` : 'i samlingen'}</div>
           </div>
 
           <div className="stats-box" style={{marginBottom: '1.5rem'}}>
@@ -367,84 +371,85 @@ function App() {
             )}
           </div>
 
-          <div className="stats-box" style={{marginBottom: '1.5rem'}}>
-            <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Etter type vin</h3>
-            {(() => {
-              const stats = {};
-              wines.forEach(w => { if (w.wineType) stats[w.wineType] = (stats[w.wineType] || 0) + 1; });
-              return Object.entries(stats).sort((a, b) => b[1] - a[1]).map(([type, count]) => (
-                <div key={type} style={{marginBottom: '0.75rem'}}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.875rem'}}>
-                    <span>{type}</span>
-                    <span style={{fontWeight: '600'}}>{count}</span>
-                  </div>
-                  <div style={{width: '100%', height: '20px', background: '#e5e7eb', borderRadius: '4px', overflow: 'hidden'}}>
-                    <div style={{width: `${Math.max(count / (Math.max(...Object.values(stats), 1)) * 100, 5)}%`, height: '100%', background: '#374151'}}></div>
-                  </div>
-                </div>
-              ));
-            })()}
-          </div>
+          {(() => {
+            const filteredWines = wines.filter(w => {
+              if (statsCountryFilter && w.country !== statsCountryFilter) return false;
+              if (statsRegionFilter && w.region !== statsRegionFilter) return false;
+              return true;
+            });
 
-          <div className="stats-box" style={{marginBottom: '1.5rem'}}>
-            <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Kvalitetsfordeling</h3>
-            {(() => {
-              const stats = {};
-              wines.forEach(w => { if (w.quality) stats[w.quality] = (stats[w.quality] || 0) + 1; });
-              return Object.entries(stats).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])).map(([quality, count]) => (
-                <div key={quality} style={{marginBottom: '0.75rem'}}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.875rem'}}>
-                    <span>{renderStars(quality)}</span>
-                    <span style={{fontWeight: '600'}}>{count}</span>
-                  </div>
-                  <div style={{width: '100%', height: '20px', background: '#e5e7eb', borderRadius: '4px', overflow: 'hidden'}}>
-                    <div style={{width: `${Math.max(count / (Math.max(...Object.values(stats), 1)) * 100, 5)}%`, height: '100%', background: '#9333ea'}}></div>
-                  </div>
-                </div>
-              ));
-            })()}
-          </div>
+            const wineTypeStats = {};
+            const qualityStats = {};
+            filteredWines.forEach(w => {
+              if (w.wineType) wineTypeStats[w.wineType] = (wineTypeStats[w.wineType] || 0) + 1;
+              if (w.quality) qualityStats[w.quality] = (qualityStats[w.quality] || 0) + 1;
+            });
 
-          <div className="stats-box" style={{marginBottom: '1.5rem'}}>
-            <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Top 20 druer</h3>
-            {(() => {
-              const stats = {};
-              wines.forEach(w => {
-                if (w.grapes) {
-                  w.grapes.split(',').forEach(g => {
-                    const grape = g.trim().replace(/\d+(\.\d+)?%/g, '').trim();
-                    if (grape) stats[grape] = (stats[grape] || 0) + 1;
-                  });
-                }
+            const PieChart = ({ data, colors }) => {
+              const total = Object.values(data).reduce((a, b) => a + b, 0);
+              if (total === 0) return <div style={{color: '#6b7280'}}>Ingen data</div>;
+              
+              let currentAngle = 0;
+              const slices = Object.entries(data).map(([label, value], idx) => {
+                const sliceAngle = (value / total) * 360;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + sliceAngle;
+                currentAngle = endAngle;
+                
+                const start = {
+                  x: 50 + 40 * Math.cos((startAngle - 90) * Math.PI / 180),
+                  y: 50 + 40 * Math.sin((startAngle - 90) * Math.PI / 180)
+                };
+                const end = {
+                  x: 50 + 40 * Math.cos((endAngle - 90) * Math.PI / 180),
+                  y: 50 + 40 * Math.sin((endAngle - 90) * Math.PI / 180)
+                };
+                const largeArc = sliceAngle > 180 ? 1 : 0;
+                const path = `M 50 50 L ${start.x} ${start.y} A 40 40 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
+                
+                const labelAngle = startAngle + sliceAngle / 2;
+                const labelX = 50 + 25 * Math.cos((labelAngle - 90) * Math.PI / 180);
+                const labelY = 50 + 25 * Math.sin((labelAngle - 90) * Math.PI / 180);
+                
+                return { label, value, path, labelX, labelY, color: colors[idx % colors.length], percentage: ((value / total) * 100).toFixed(0) };
               });
-              const maxCount = Math.max(...Object.values(stats), 1);
-              return Object.entries(stats).sort((a, b) => b[1] - a[1]).slice(0, 20).map(([grape, count]) => (
-                <div key={grape} style={{marginBottom: '0.5rem'}}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.75rem'}}>
-                    <span>{grape}</span>
-                    <span style={{fontWeight: '600'}}>{count}</span>
-                  </div>
-                  <div style={{width: '100%', height: '16px', background: '#e5e7eb', borderRadius: '4px', overflow: 'hidden'}}>
-                    <div style={{width: `${Math.max(count / maxCount * 100, 3)}%`, height: '100%', background: '#2563eb'}}></div>
+              
+              return (
+                <div>
+                  <svg width="200" height="200" viewBox="0 0 100 100" style={{display: 'inline-block'}}>
+                    {slices.map((slice, i) => (
+                      <g key={i}>
+                        <path d={slice.path} fill={slice.color} stroke="white" strokeWidth="2" />
+                      </g>
+                    ))}
+                  </svg>
+                  <div style={{marginTop: '1rem'}}>
+                    {slices.map((slice, i) => (
+                      <div key={i} style={{display: 'flex', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.875rem'}}>
+                        <div style={{width: '12px', height: '12px', background: slice.color, marginRight: '0.5rem', borderRadius: '2px'}}></div>
+                        <span style={{flex: 1}}>{slice.label}</span>
+                        <span style={{fontWeight: '600'}}>{slice.value} ({slice.percentage}%)</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ));
-            })()}
-          </div>
+              );
+            };
 
-          <div className="stats-box">
-            <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Top land {statsCountryFilter ? '(filtrert)' : ''}</h3>
-            {(() => {
-              const stats = {};
-              wines.forEach(w => { if (w.country) stats[w.country] = (stats[w.country] || 0) + 1; });
-              return Object.entries(statsCountryFilter ? { [statsCountryFilter]: stats[statsCountryFilter] || 0 } : stats).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([country, count]) => (
-                <div key={country} style={{display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem'}}>
-                  <span>{country}</span>
-                  <span style={{fontWeight: '600'}}>{count}</span>
+            return (
+              <>
+                <div className="stats-box" style={{marginBottom: '1.5rem'}}>
+                  <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Fordeling etter type vin</h3>
+                  <PieChart data={wineTypeStats} colors={['#374151', '#2563eb', '#9333ea', '#dc2626', '#059669', '#f59e0b']} />
                 </div>
-              ));
-            })()}
-          </div>
+
+                <div className="stats-box">
+                  <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Fordeling etter kvalitet</h3>
+                  <PieChart data={Object.fromEntries(Object.entries(qualityStats).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])).map(([q, c]) => [renderStars(q), c]))} colors={['#fbbf24', '#f59e0b', '#f97316', '#ef4444', '#dc2626']} />
+                </div>
+              </>
+            );
+          })()}
         </div>
       )}
 
