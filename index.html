@@ -631,13 +631,107 @@ function App() {
               <button className="close-btn" onClick={() => { setShowDetails(false); setSelectedWine(null); }}>×</button>
             </div>
             <div className="modal-body">
-              {selectedWine.wineType && <p><strong>Type:</strong> {selectedWine.wineType}</p>}
-              {selectedWine.dateTasted && <p><strong>Dato:</strong> {toNorwegianDate(selectedWine.dateTasted)}</p>}
-              {selectedWine.country && <p><strong>Land:</strong> {selectedWine.country}</p>}
-              {selectedWine.region && <p><strong>Region:</strong> {selectedWine.region}</p>}
-              {selectedWine.subRegion && <p><strong>Underregion:</strong> {selectedWine.subRegion}</p>}
-              {selectedWine.grapes && <p><strong>Druer:</strong> {selectedWine.grapes}</p>}
-              {selectedWine.quality && <p><strong>Kvalitet:</strong> {renderStars(selectedWine.quality)}</p>}
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '0.75rem 1rem', fontSize: '0.875rem'}}>
+                {selectedWine.wineType && <>
+                  <div style={{fontWeight: '600', color: '#6b7280'}}>Type vin</div>
+                  <div>{selectedWine.wineType}</div>
+                </>}
+                {selectedWine.dateTasted && <>
+                  <div style={{fontWeight: '600', color: '#6b7280'}}>Dato</div>
+                  <div>{toNorwegianDate(selectedWine.dateTasted)}</div>
+                </>}
+                {selectedWine.country && <>
+                  <div style={{fontWeight: '600', color: '#6b7280'}}>Land</div>
+                  <div>{selectedWine.country}</div>
+                </>}
+                {selectedWine.region && <>
+                  <div style={{fontWeight: '600', color: '#6b7280'}}>Region</div>
+                  <div>{selectedWine.region}</div>
+                </>}
+                {selectedWine.subRegion && <>
+                  <div style={{fontWeight: '600', color: '#6b7280'}}>Underregion</div>
+                  <div>{selectedWine.subRegion}</div>
+                </>}
+                {selectedWine.grapes && <>
+                  <div style={{fontWeight: '600', color: '#6b7280'}}>Druer</div>
+                  <div>{selectedWine.grapes}</div>
+                </>}
+              </div>
+              {(selectedWine.sightClarity || selectedWine.sightIntensity || selectedWine.sightColor) && (
+                <div style={{marginTop: '1rem'}}>
+                  <h3 style={{fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem'}}>Utseende</h3>
+                  <div style={{display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '0.75rem 1rem', fontSize: '0.875rem'}}>
+                    {selectedWine.sightClarity && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Klarhet</div>
+                      <div>{selectedWine.sightClarity}</div>
+                    </>}
+                    {selectedWine.sightIntensity && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Intensitet</div>
+                      <div>{selectedWine.sightIntensity}</div>
+                    </>}
+                    {selectedWine.sightColor && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Farge</div>
+                      <div>{selectedWine.sightColor}</div>
+                    </>}
+                  </div>
+                </div>
+              )}
+              {(selectedWine.noseCondition || selectedWine.noseIntensity || selectedWine.noseAroma) && (
+                <div style={{marginTop: '1rem'}}>
+                  <h3 style={{fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem'}}>Duft</h3>
+                  <div style={{display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '0.75rem 1rem', fontSize: '0.875rem'}}>
+                    {selectedWine.noseCondition && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Tilstand</div>
+                      <div>{selectedWine.noseCondition}</div>
+                    </>}
+                    {selectedWine.noseIntensity && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Intensitet</div>
+                      <div>{selectedWine.noseIntensity}</div>
+                    </>}
+                    {selectedWine.noseAroma && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Aroma</div>
+                      <div style={{whiteSpace: 'pre-wrap'}}>{selectedWine.noseAroma}</div>
+                    </>}
+                  </div>
+                </div>
+              )}
+              {(selectedWine.sweetness || selectedWine.acid || selectedWine.tannin || selectedWine.body || selectedWine.taste || selectedWine.length) && (
+                <div style={{marginTop: '1rem'}}>
+                  <h3 style={{fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem'}}>Smak</h3>
+                  <div style={{display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '0.75rem 1rem', fontSize: '0.875rem'}}>
+                    {selectedWine.sweetness && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Sødme</div>
+                      <div>{selectedWine.sweetness}</div>
+                    </>}
+                    {selectedWine.acid && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Syrlighet</div>
+                      <div>{selectedWine.acid}</div>
+                    </>}
+                    {selectedWine.tannin && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Tannin</div>
+                      <div>{selectedWine.tannin}</div>
+                    </>}
+                    {selectedWine.body && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Kropp</div>
+                      <div>{selectedWine.body}</div>
+                    </>}
+                    {selectedWine.taste && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Smak</div>
+                      <div style={{whiteSpace: 'pre-wrap'}}>{selectedWine.taste}</div>
+                    </>}
+                    {selectedWine.length && <>
+                      <div style={{fontWeight: '600', color: '#6b7280'}}>Lengde</div>
+                      <div>{selectedWine.length}</div>
+                    </>}
+                  </div>
+                </div>
+              )}
+              {selectedWine.quality && (
+                <div style={{marginTop: '1rem'}}>
+                  <div style={{fontWeight: '600', color: '#6b7280', marginBottom: '0.5rem', fontSize: '0.875rem'}}>Kvalitet</div>
+                  <div style={{fontSize: '1.25rem'}}>{renderStars(selectedWine.quality)}</div>
+                </div>
+              )}
             </div>
             <div className="modal-footer">
               <button onClick={() => { if (checkPassword()) { setForm(selectedWine); setEditId(selectedWine.id); setShowDetails(false); setShowForm(true); } }} className="btn-primary">Rediger</button>
@@ -655,23 +749,33 @@ function App() {
               <button className="close-btn" onClick={() => { setShowForm(false); setEditId(null); resetForm(); }}>×</button>
             </div>
             <div className="modal-body">
-              <div className="form-group"><label className="form-label">Vinnavn *</label><input type="text" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} /></div>
-              <div className="form-group"><label className="form-label">URL</label><input type="url" value={form.url} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} /></div>
-              <div className="form-group"><label className="form-label">Type vin</label><select value={form.wineType} onChange={(e) => setForm(p => ({ ...p, wineType: e.target.value }))}><option value="">Velg type</option><option value="Rødvin">Rødvin</option><option value="Hvitvin">Hvitvin</option><option value="Rosévin">Rosévin</option></select></div>
-              <div className="form-group"><label className="form-label">Dato</label><input type="date" value={form.dateTasted} onChange={(e) => setForm(p => ({ ...p, dateTasted: e.target.value }))} /></div>
-              <div className="form-group"><label className="form-label">Land</label><input type="text" value={form.country} onChange={(e) => setForm(p => ({ ...p, country: e.target.value, region: '', subRegion: '' }))} list="countries-list" /><datalist id="countries-list">{[...new Set(wines.map(w => w.country).filter(Boolean))].sort().map(c => <option key={c} value={c} />)}</datalist></div>
-              <div className="form-group"><label className="form-label">Region</label><input type="text" value={form.region} onChange={(e) => setForm(p => ({ ...p, region: e.target.value, subRegion: '' }))} list="regions-list" /><datalist id="regions-list">{form.country && [...new Set(wines.filter(w => w.country === form.country).map(w => w.region).filter(Boolean))].sort().map(r => <option key={r} value={r} />)}</datalist></div>
-              <div className="form-group"><label className="form-label">Underregion</label><input type="text" value={form.subRegion} onChange={(e) => setForm(p => ({ ...p, subRegion: e.target.value }))} list="subregions-list" /><datalist id="subregions-list">{form.region && [...new Set(wines.filter(w => w.country === form.country && w.region === form.region).map(w => w.subRegion).filter(Boolean))].sort().map(sr => <option key={sr} value={sr} />)}</datalist></div>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem'}}>
+                <div className="form-group"><label className="form-label">Vinnavn *</label><input type="text" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">URL</label><input type="url" value={form.url} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} /></div>
+              </div>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem'}}>
+                <div className="form-group"><label className="form-label">Type vin</label><select value={form.wineType} onChange={(e) => setForm(p => ({ ...p, wineType: e.target.value }))}><option value="">Velg type</option><option value="Rødvin">Rødvin</option><option value="Hvitvin">Hvitvin</option><option value="Rosévin">Rosévin</option></select></div>
+                <div className="form-group"><label className="form-label">Dato</label><input type="date" value={form.dateTasted} onChange={(e) => setForm(p => ({ ...p, dateTasted: e.target.value }))} /></div>
+              </div>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem'}}>
+                <input placeholder="Land" value={form.country} onChange={(e) => setForm(p => ({ ...p, country: e.target.value, region: '', subRegion: '' }))} list="countries-list" style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} />
+                <datalist id="countries-list">{[...new Set(wines.map(w => w.country).filter(Boolean))].sort().map(c => <option key={c} value={c} />)}</datalist>
+                <input placeholder="Region" value={form.region} onChange={(e) => setForm(p => ({ ...p, region: e.target.value, subRegion: '' }))} list="regions-list" style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} />
+                <datalist id="regions-list">{form.country && [...new Set(wines.filter(w => w.country === form.country).map(w => w.region).filter(Boolean))].sort().map(r => <option key={r} value={r} />)}</datalist>
+                <input placeholder="Underregion" value={form.subRegion} onChange={(e) => setForm(p => ({ ...p, subRegion: e.target.value }))} list="subregions-list" style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} />
+                <datalist id="subregions-list">{form.region && [...new Set(wines.filter(w => w.country === form.country && w.region === form.region).map(w => w.subRegion).filter(Boolean))].sort().map(sr => <option key={sr} value={sr} />)}</datalist>
+              </div>
               <div className="form-group"><label className="form-label">Druer</label><input type="text" value={form.grapes} onChange={(e) => setForm(p => ({ ...p, grapes: e.target.value }))} list="grapes-list" /><datalist id="grapes-list">{(() => {const grapeSet = new Set(); wines.filter(w => !form.country || w.country === form.country).forEach(w => {if (w.grapes) {w.grapes.split(',').forEach(g => {const grape = g.trim().replace(/\d+(\.\d+)?%/g, '').trim(); if (grape) grapeSet.add(grape);}); }}); return [...grapeSet].sort().map(g => <option key={g} value={g} />);})()}</datalist></div>
               <h3 style={{fontSize: '0.875rem', fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem'}}>Utseende</h3>
-              <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem'}}><div className="form-group" style={{marginBottom: 0}}><input type="text" placeholder="Klarhet" value={form.sightClarity} onChange={(e) => setForm(p => ({ ...p, sightClarity: e.target.value }))} /></div><div className="form-group" style={{marginBottom: 0}}><input type="text" placeholder="Intensitet" value={form.sightIntensity} onChange={(e) => setForm(p => ({ ...p, sightIntensity: e.target.value }))} /></div><div className="form-group" style={{marginBottom: 0}}><input type="text" placeholder="Farge" value={form.sightColor} onChange={(e) => setForm(p => ({ ...p, sightColor: e.target.value }))} /></div></div>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem'}}><input type="text" placeholder="Klarhet" value={form.sightClarity} onChange={(e) => setForm(p => ({ ...p, sightClarity: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} /><input type="text" placeholder="Intensitet" value={form.sightIntensity} onChange={(e) => setForm(p => ({ ...p, sightIntensity: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} /><input type="text" placeholder="Farge" value={form.sightColor} onChange={(e) => setForm(p => ({ ...p, sightColor: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} /></div>
               <h3 style={{fontSize: '0.875rem', fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem'}}>Duft</h3>
-              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem'}}><div className="form-group" style={{marginBottom: 0}}><input type="text" placeholder="Tilstand" value={form.noseCondition} onChange={(e) => setForm(p => ({ ...p, noseCondition: e.target.value }))} /></div><div className="form-group" style={{marginBottom: 0}}><input type="text" placeholder="Intensitet" value={form.noseIntensity} onChange={(e) => setForm(p => ({ ...p, noseIntensity: e.target.value }))} /></div></div><div className="form-group"><input type="text" placeholder="Aroma" value={form.noseAroma} onChange={(e) => setForm(p => ({ ...p, noseAroma: e.target.value }))} /></div>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem'}}><input type="text" placeholder="Tilstand" value={form.noseCondition} onChange={(e) => setForm(p => ({ ...p, noseCondition: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} /><input type="text" placeholder="Intensitet" value={form.noseIntensity} onChange={(e) => setForm(p => ({ ...p, noseIntensity: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} /></div>
+              <textarea placeholder="Aroma" value={form.noseAroma} onChange={(e) => setForm(p => ({ ...p, noseAroma: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem', fontFamily: 'inherit', minHeight: '60px', resize: 'vertical', marginBottom: '0.75rem'}} />
               <h3 style={{fontSize: '0.875rem', fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem'}}>Smak</h3>
-              <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem'}}><div className="form-group" style={{marginBottom: 0}}><input type="text" placeholder="Sødme" value={form.sweetness} onChange={(e) => setForm(p => ({ ...p, sweetness: e.target.value }))} /></div><div className="form-group" style={{marginBottom: 0}}><input type="text" placeholder="Syrlighet" value={form.acid} onChange={(e) => setForm(p => ({ ...p, acid: e.target.value }))} /></div><div className="form-group" style={{marginBottom: 0}}><input type="text" placeholder="Tannin" value={form.tannin} onChange={(e) => setForm(p => ({ ...p, tannin: e.target.value }))} /></div><div className="form-group" style={{marginBottom: 0}}><input type="text" placeholder="Kropp" value={form.body} onChange={(e) => setForm(p => ({ ...p, body: e.target.value }))} /></div></div>
-              <div className="form-group"><input type="text" placeholder="Smak" value={form.taste} onChange={(e) => setForm(p => ({ ...p, taste: e.target.value }))} /></div>
-              <div className="form-group"><input type="text" placeholder="Lengde" value={form.length} onChange={(e) => setForm(p => ({ ...p, length: e.target.value }))} /></div>
-              <div className="form-group"><label className="form-label">Kvalitet</label><div className="stars">{[1,2,3,4,5].map(s => {const cr = parseFloat(form.quality) || 0; return <span key={s} onClick={() => setForm(p => ({ ...p, quality: (cr === s ? s - 0.5 : s).toString() }))} style={{marginRight: '0.25rem'}}>{cr >= s ? '★' : cr === s - 0.5 ? '½' : '☆'}</span>;})}</div></div>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem'}}><input type="text" placeholder="Sødme" value={form.sweetness} onChange={(e) => setForm(p => ({ ...p, sweetness: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} /><input type="text" placeholder="Syrlighet" value={form.acid} onChange={(e) => setForm(p => ({ ...p, acid: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} /><input type="text" placeholder="Tannin" value={form.tannin} onChange={(e) => setForm(p => ({ ...p, tannin: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} /><input type="text" placeholder="Kropp" value={form.body} onChange={(e) => setForm(p => ({ ...p, body: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem'}} /></div>
+              <textarea placeholder="Smak" value={form.taste} onChange={(e) => setForm(p => ({ ...p, taste: e.target.value }))} style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem', fontFamily: 'inherit', minHeight: '60px', resize: 'vertical', marginBottom: '0.75rem', width: '100%'}} />
+              <div className="form-group"><label className="form-label">Lengde</label><input type="text" value={form.length} onChange={(e) => setForm(p => ({ ...p, length: e.target.value }))} /></div>
+              <div className="form-group"><label className="form-label">Kvalitet</label><div className="stars">{[1,2,3,4,5].map(s => {const cr = parseFloat(form.quality) || 0; return <span key={s} onClick={() => setForm(p => ({ ...p, quality: (cr === s ? s - 0.5 : s).toString() }))} style={{marginRight: '0.25rem', cursor: 'pointer', fontSize: '1.5rem'}}>{cr >= s ? '★' : cr === s - 0.5 ? '½' : '☆'}</span>;})}</div></div>
             </div>
             <div className="modal-footer">
               <button onClick={save} disabled={saving} className="btn-primary">{saving ? 'Lagrer...' : (editId ? 'Oppdater' : 'Legg til')}</button>
