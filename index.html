@@ -12,6 +12,7 @@
       min-height: 100vh; 
       padding: 1rem;
     }
+    .debug { position: fixed; bottom: 1rem; right: 1rem; background: white; border: 2px solid red; padding: 1rem; max-width: 300px; font-size: 0.75rem; max-height: 200px; overflow-y: auto; z-index: 9999; }
     .container { max-width: 80rem; margin: 0 auto; }
     .card { 
       background: white; 
@@ -32,12 +33,9 @@
       font-family: inherit;
     }
     .btn-primary { background: #374151; color: white; }
-    .btn-primary:hover { background: #1f2937; }
     .btn-secondary { background: #6b7280; color: white; }
     .btn-gray { background: #d1d5db; color: #374151; }
-    .btn-red { background: #dc2626; color: white; }
-    .btn-blue { background: #2563eb; color: white; }
-    input, select, textarea { 
+    input, select { 
       width: 100%; 
       padding: 0.5rem; 
       border: 1px solid #d1d5db; 
@@ -48,9 +46,8 @@
     }
     .flex { display: flex; gap: 0.5rem; align-items: center; }
     .flex-between { display: flex; justify-content: space-between; align-items: center; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
-    .hidden { display: none; }
+    .hidden { display: none !important; }
     .modal { 
       position: fixed; 
       inset: 0; 
@@ -106,17 +103,14 @@
       font-family: inherit;
     }
     .tab-active { background: #374151; color: white; }
-    .tab-inactive { background: #d1d5db; color: #374151; }
-    .stars { font-weight: bold; }
-    .space-y { display: flex; flex-direction: column; gap: 0.5rem; }
-    @media (max-width: 640px) {
-      body { padding: 0.5rem; }
-      .grid-3 { grid-template-columns: 1fr; }
-      .grid-2 { grid-template-columns: 1fr; }
-    }
   </style>
 </head>
 <body>
+  <div id="debug" class="debug">
+    <strong>DEBUG LOG:</strong>
+    <div id="debugLog"></div>
+  </div>
+
   <div class="container">
     <div class="card">
       <div class="flex-between">
@@ -127,72 +121,7 @@
         </div>
       </div>
       
-      <div class="flex" style="margin-bottom: 1rem;">
-        <button class="tab-btn tab-active" id="tabList">Utforsk</button>
-        <button class="tab-btn tab-inactive" id="tabStats">Statistikk</button>
-      </div>
-
-      <div id="listView">
-        <div class="space-y">
-          <input type="text" id="searchInput" placeholder="Søk..." />
-          <div class="grid-3">
-            <select id="filterType">
-              <option value="">Alle typer</option>
-              <option value="Rødvin">Rødvin</option>
-              <option value="Hvitvin">Hvitvin</option>
-              <option value="Rosévin">Rosévin</option>
-            </select>
-            <select id="filterQuality">
-              <option value="">Alle stjerner</option>
-            </select>
-            <select id="sortBy">
-              <option value="newest">Nyeste først</option>
-              <option value="quality">Kvalitet</option>
-            </select>
-          </div>
-          <select id="filterCountry">
-            <option value="">Alle land</option>
-          </select>
-          <button class="btn-gray" id="resetBtn">Nullstill</button>
-        </div>
-      </div>
-
-      <div id="statsView" class="hidden">
-        <p style="font-size: 2rem; font-weight: bold; margin: 1rem 0;">-</p>
-        <p>Totalt viner</p>
-      </div>
-    </div>
-
-    <div id="wineList"></div>
-  </div>
-
-  <!-- Add Wine Modal -->
-  <div id="addModal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Ny vin</h2>
-        <button style="background: none; border: none; font-size: 1.5rem; cursor: pointer;" class="closeBtn">×</button>
-      </div>
-      <div class="modal-body space-y">
-        <input type="text" id="formName" placeholder="Vinnavn *" />
-        <input type="url" id="formUrl" placeholder="URL" />
-        <select id="formType">
-          <option value="">Type vin</option>
-          <option value="Rødvin">Rødvin</option>
-          <option value="Hvitvin">Hvitvin</option>
-        </select>
-        <input type="date" id="formDate" />
-        <input type="text" id="formCountry" placeholder="Land" />
-        <input type="text" id="formGrapes" placeholder="Druer" />
-        <div>
-          <label style="font-size: 0.875rem; font-weight: 500;">Kvalitet</label>
-          <div class="flex" id="starRating"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-primary" id="saveBtn">Legg til</button>
-        <button class="btn-gray" id="cancelBtn">Avbryt</button>
-      </div>
+      <div id="wineList"></div>
     </div>
   </div>
 
@@ -200,26 +129,28 @@
   <div id="detailsModal" class="modal hidden">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="detailsName"></h2>
-        <button style="background: none; border: none; font-size: 1.5rem; cursor: pointer;" class="closeBtn">×</button>
+        <h2 id="detailsName">Test</h2>
+        <button style="background: none; border: none; font-size: 1.5rem; cursor: pointer;" id="closeDetailsBtn">×</button>
       </div>
-      <div class="modal-body" id="detailsBody"></div>
-      <div class="modal-footer">
-        <button class="btn-blue" id="editBtn">✎ Rediger</button>
-        <button class="btn-gray" id="closeDetailsBtn">Lukk</button>
+      <div class="modal-body" id="detailsBody">
+        <p>Test content</p>
       </div>
     </div>
   </div>
 
   <script>
     const SHEET_ID = '1QagDAoCbeuAneC0H37PhIVncqUxIslH8lrchBgyfhnA';
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyX1qUO2jWSAynR65Ik5c35mp7dyWJMkSSQelRtbmFOyLGsYlS2_8jCoaLNUW9WZVA/exec';
-    
     let wines = [];
-    let currentView = 'list';
-    let selectedWine = null;
-    let editingId = null;
-    let currentQuality = '';
+
+    function debug(msg) {
+      const log = document.getElementById('debugLog');
+      const line = document.createElement('div');
+      line.textContent = new Date().toLocaleTimeString() + ': ' + msg;
+      log.appendChild(line);
+      console.log(msg);
+    }
+
+    debug('Page loaded');
 
     const formatDate = (dateValue) => {
       if (!dateValue) return '';
@@ -237,95 +168,47 @@
       return `${day}.${month}.${year}`;
     };
 
-    const checkPassword = () => {
-      const authorized = localStorage.getItem('vinkartotek_auth');
-      if (authorized === 'true') return true;
-      const password = prompt('Passord påkrevd for å gjøre endringer:');
-      if (password === 'Arteta') {
-        localStorage.setItem('vinkartotek_auth', 'true');
-        return true;
-      }
-      alert('Feil passord');
-      return false;
-    };
-
     const loadData = async () => {
+      debug('loadData() called');
       try {
         const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
+        debug('Fetch completed, status: ' + r.status);
+        
+        if (!r.ok) {
+          throw new Error('HTTP ' + r.status);
+        }
+        
         const t = await r.text();
+        debug('Got text: ' + t.length + ' chars');
+        
         const j = JSON.parse(t.substring(47).slice(0, -2));
+        debug('Parsed JSON');
         
-        wines = j.table.rows.map((row, i) => {
-          let qualityValue = '';
-          if (row.c[20]?.v !== null && row.c[20]?.v !== undefined) {
-            qualityValue = String(row.c[20].v);
-            if (qualityValue.startsWith("'")) qualityValue = qualityValue.substring(1);
-          }
-          return {
-            id: i + 1,
-            name: row.c[0]?.v || '',
-            url: row.c[1]?.v || '',
-            wineType: row.c[2]?.v || '',
-            dateTasted: formatDate(row.c[3]?.v) || '',
-            country: row.c[4]?.v || '',
-            region: row.c[5]?.v || '',
-            subRegion: row.c[6]?.v || '',
-            grapes: row.c[7]?.v || '',
-            quality: qualityValue
-          };
-        });
+        wines = j.table.rows.map((row, i) => ({
+          id: i + 1,
+          name: row.c[0]?.v || '',
+          wineType: row.c[2]?.v || '',
+          dateTasted: formatDate(row.c[3]?.v) || '',
+          country: row.c[4]?.v || '',
+          quality: row.c[20]?.v || ''
+        }));
         
-        updateFilters();
+        debug('Loaded ' + wines.length + ' wines');
         render();
       } catch (e) {
-        alert('Feil ved lasting: ' + e.message);
+        debug('ERROR: ' + e.message);
+        alert('Feil: ' + e.message);
       }
-    };
-
-    const updateFilters = () => {
-      const qualities = [...new Set(wines.map(w => w.quality).filter(Boolean))].sort((a, b) => parseFloat(b) - parseFloat(a));
-      const countries = [...new Set(wines.map(w => w.country).filter(Boolean))].sort();
-      
-      const qualitySelect = document.getElementById('filterQuality');
-      qualitySelect.innerHTML = '<option value="">Alle stjerner</option>' + qualities.map(q => `<option value="${q}">${q}★</option>`).join('');
-      
-      const countrySelect = document.getElementById('filterCountry');
-      countrySelect.innerHTML = '<option value="">Alle land</option>' + countries.map(c => `<option value="${c}">${c}</option>`).join('');
     };
 
     const render = () => {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const type = document.getElementById('filterType').value;
-      const quality = document.getElementById('filterQuality').value;
-      const country = document.getElementById('filterCountry').value;
-      const sort = document.getElementById('sortBy').value || 'newest';
-      
-      let filtered = wines.filter(w => {
-        const matchSearch = Object.values(w).some(v => String(v).toLowerCase().includes(search));
-        const matchType = !type || w.wineType === type;
-        const matchQuality = !quality || w.quality === quality;
-        const matchCountry = !country || w.country === country;
-        return matchSearch && matchType && matchQuality && matchCountry;
-      });
-
-      if (sort === 'newest') {
-        filtered.sort((a, b) => {
-          const dateA = new Date(a.dateTasted || 0);
-          const dateB = new Date(b.dateTasted || 0);
-          if (dateB.getTime() !== dateA.getTime()) return dateB - dateA;
-          return b.id - a.id;
-        });
-      } else if (sort === 'quality') {
-        filtered.sort((a, b) => parseFloat(b.quality || 0) - parseFloat(a.quality || 0));
-      }
-
+      debug('render() called');
       const list = document.getElementById('wineList');
       list.innerHTML = '';
       
-      filtered.forEach(w => {
+      wines.forEach(w => {
         const card = document.createElement('div');
         card.className = 'wine-card';
-        card.style.cursor = 'pointer';
         
         const nameDiv = document.createElement('div');
         nameDiv.className = 'wine-name';
@@ -335,243 +218,39 @@
         metaDiv.className = 'wine-meta';
         metaDiv.textContent = `${w.wineType} · ${w.country} · ${toNorwegianDate(w.dateTasted)}`;
         
-        const actionDiv = document.createElement('div');
-        actionDiv.className = 'flex-between';
-        actionDiv.style.marginTop = '0.5rem';
-        
-        const starsSpan = document.createElement('span');
-        starsSpan.className = 'stars';
-        starsSpan.textContent = w.quality + '★';
-        
-        const buttonsDiv = document.createElement('div');
-        buttonsDiv.className = 'flex';
-        
-        if (w.url) {
-          const link = document.createElement('a');
-          link.href = w.url;
-          link.target = '_blank';
-          link.style.textDecoration = 'none';
-          link.textContent = '🔗';
-          link.onclick = (e) => e.stopPropagation();
-          buttonsDiv.appendChild(link);
-        }
-        
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn-primary';
-        editBtn.style.padding = '0.25rem 0.5rem';
-        editBtn.textContent = '✎';
-        editBtn.onclick = (e) => { e.stopPropagation(); editWine(e, w.id); };
-        buttonsDiv.appendChild(editBtn);
-        
-        const delBtn = document.createElement('button');
-        delBtn.className = 'btn-secondary';
-        delBtn.style.padding = '0.25rem 0.5rem';
-        delBtn.textContent = '✕';
-        delBtn.onclick = (e) => { e.stopPropagation(); deleteWine(e, w.id); };
-        buttonsDiv.appendChild(delBtn);
-        
-        actionDiv.appendChild(starsSpan);
-        actionDiv.appendChild(buttonsDiv);
-        
         card.appendChild(nameDiv);
         card.appendChild(metaDiv);
-        card.appendChild(actionDiv);
         
-        card.onclick = (e) => {
-          if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
-            selectWine(w.id);
-          }
+        card.onclick = () => {
+          debug('Card clicked: ' + w.id);
+          const modal = document.getElementById('detailsModal');
+          document.getElementById('detailsName').textContent = w.name;
+          document.getElementById('detailsBody').textContent = `${w.wineType} · ${w.country}`;
+          modal.classList.remove('hidden');
+          debug('Modal should be visible now');
         };
         
         list.appendChild(card);
       });
-
-      document.getElementById('statsView').querySelector('p').textContent = wines.length;
+      debug('render() complete, ' + wines.length + ' cards created');
     };
 
-    const selectWine = (id) => {
-      selectedWine = wines.find(w => w.id === id);
-      document.getElementById('detailsName').textContent = selectedWine.name;
-      
-      const detailsBody = document.getElementById('detailsBody');
-      detailsBody.innerHTML = '';
-      
-      const createDetail = (label, value) => {
-        if (!value) return;
-        const p = document.createElement('p');
-        const strong = document.createElement('strong');
-        strong.textContent = label + ': ';
-        p.appendChild(strong);
-        p.appendChild(document.createTextNode(value));
-        detailsBody.appendChild(p);
-      };
-      
-      createDetail('Type', selectedWine.wineType);
-      createDetail('Land', selectedWine.country);
-      createDetail('Druer', selectedWine.grapes);
-      createDetail('Kvalitet', selectedWine.quality + '★');
-      
-      document.getElementById('detailsModal').classList.remove('hidden');
-    };
-
-    const editWine = (e, id) => {
-      e.stopPropagation();
-      if (!checkPassword()) return;
-      const wine = wines.find(w => w.id === id);
-      editingId = id;
-      document.getElementById('formName').value = wine.name;
-      document.getElementById('formUrl').value = wine.url;
-      document.getElementById('formType').value = wine.wineType;
-      document.getElementById('formDate').value = wine.dateTasted;
-      document.getElementById('formCountry').value = wine.country;
-      document.getElementById('formGrapes').value = wine.grapes;
-      currentQuality = wine.quality;
-      updateStarRating();
-      document.getElementById('saveBtn').textContent = 'Oppdater';
-      document.getElementById('addModal').classList.remove('hidden');
-    };
-
-    const deleteWine = async (e, id) => {
-      e.stopPropagation();
-      if (!checkPassword()) return;
-      if (!confirm('Slette?')) return;
-      const wine = wines.find(w => w.id === id);
-      try {
-        const r = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'delete', name: wine.name, dateTasted: wine.dateTasted })
-        });
-        const res = await r.json();
-        if (res.success) {
-          loadData();
-          alert('Slettet!');
-        } else alert('Feil: ' + res.message);
-      } catch (e) {
-        alert('Feil: ' + e.message);
-      }
-    };
-
-    const updateStarRating = () => {
-      const container = document.getElementById('starRating');
-      const cr = parseFloat(currentQuality) || 0;
-      container.innerHTML = [1,2,3,4,5].map(s => `
-        <span onclick="setQuality(${s})" style="font-size: 1.5rem; cursor: pointer;">
-          ${cr >= s ? '★' : cr === s - 0.5 ? '½' : '☆'}
-        </span>
-      `).join('');
-    };
-
-    const setQuality = (s) => {
-      const cr = parseFloat(currentQuality) || 0;
-      currentQuality = (cr === s ? s - 0.5 : s).toString();
-      updateStarRating();
-    };
-
-    const saveWine = async () => {
-      const name = document.getElementById('formName').value;
-      if (!name) { alert('Navn påkrevd'); return; }
-
-      const formData = {
-        name,
-        url: document.getElementById('formUrl').value,
-        wineType: document.getElementById('formType').value,
-        dateTasted: document.getElementById('formDate').value,
-        country: document.getElementById('formCountry').value,
-        grapes: document.getElementById('formGrapes').value,
-        quality: currentQuality
-      };
-
-      try {
-        const body = editingId ? {
-          action: 'update',
-          originalName: wines.find(w => w.id === editingId).name,
-          originalDate: wines.find(w => w.id === editingId).dateTasted,
-          ...formData
-        } : { action: 'add', ...formData };
-
-        const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
-        const res = await r.json();
-        if (res.success) {
-          loadData();
-          closeAddModal();
-        } else alert('Feil: ' + res.message);
-      } catch (e) {
-        alert('Feil: ' + e.message);
-      }
-    };
-
-    const closeAddModal = () => {
-      document.getElementById('addModal').classList.add('hidden');
-      document.getElementById('formName').value = '';
-      document.getElementById('formUrl').value = '';
-      document.getElementById('formType').value = '';
-      document.getElementById('formDate').value = new Date().toISOString().split('T')[0];
-      document.getElementById('formCountry').value = '';
-      document.getElementById('formGrapes').value = '';
-      currentQuality = '';
-      editingId = null;
-      document.getElementById('saveBtn').textContent = 'Legg til';
-    };
-
-    // Event listeners
-    document.getElementById('addBtn').addEventListener('click', () => {
-      if (checkPassword()) {
-        document.getElementById('formDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('addModal').classList.remove('hidden');
-      }
-    });
-
-    document.getElementById('refreshBtn').addEventListener('click', loadData);
-    document.getElementById('saveBtn').addEventListener('click', saveWine);
-    document.getElementById('cancelBtn').addEventListener('click', closeAddModal);
-    document.getElementById('closeDetailsBtn').addEventListener('click', () => document.getElementById('detailsModal').classList.add('hidden'));
-    
-    document.querySelectorAll('.closeBtn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        if (e.target.closest('#addModal')) closeAddModal();
-        else document.getElementById('detailsModal').classList.add('hidden');
-      });
-    });
-
-    document.getElementById('editBtn').addEventListener('click', () => {
-      editWine({stopPropagation: () => {}}, selectedWine.id);
+    debug('Attaching event listeners');
+    document.getElementById('closeDetailsBtn').addEventListener('click', () => {
+      debug('Close button clicked');
       document.getElementById('detailsModal').classList.add('hidden');
     });
 
-    document.getElementById('searchInput').addEventListener('input', render);
-    document.getElementById('filterType').addEventListener('change', render);
-    document.getElementById('filterQuality').addEventListener('change', render);
-    document.getElementById('sortBy').addEventListener('change', render);
-    document.getElementById('filterCountry').addEventListener('change', render);
-    
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('filterType').value = '';
-      document.getElementById('filterQuality').value = '';
-      document.getElementById('filterCountry').value = '';
-      document.getElementById('sortBy').value = 'newest';
-      render();
+    document.getElementById('addBtn').addEventListener('click', () => {
+      debug('Add button clicked');
     });
 
-    document.getElementById('tabList').addEventListener('click', () => {
-      document.getElementById('listView').classList.remove('hidden');
-      document.getElementById('statsView').classList.add('hidden');
-      document.getElementById('tabList').classList.add('tab-active');
-      document.getElementById('tabList').classList.remove('tab-inactive');
-      document.getElementById('tabStats').classList.remove('tab-active');
-      document.getElementById('tabStats').classList.add('tab-inactive');
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      debug('Refresh button clicked');
+      loadData();
     });
 
-    document.getElementById('tabStats').addEventListener('click', () => {
-      document.getElementById('listView').classList.add('hidden');
-      document.getElementById('statsView').classList.remove('hidden');
-      document.getElementById('tabStats').classList.add('tab-active');
-      document.getElementById('tabStats').classList.remove('tab-inactive');
-      document.getElementById('tabList').classList.remove('tab-active');
-      document.getElementById('tabList').classList.add('tab-inactive');
-    });
-
-    // Load data on start
+    debug('Event listeners attached, calling loadData()');
     loadData();
   </script>
 </body>
