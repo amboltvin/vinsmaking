@@ -1,375 +1,925 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vinkartotek</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-      background: linear-gradient(135deg, #faf5f0 0%, #f3f4f6 100%);
-      min-height: 100vh; 
-      padding: 1rem;
-    }
-    .debug { position: fixed; bottom: 1rem; right: 1rem; background: white; border: 2px solid red; padding: 0.5rem; max-width: 250px; font-size: 0.65rem; max-height: 150px; overflow-y: auto; z-index: 9999; }
-    .container { max-width: 80rem; margin: 0 auto; }
-    .card { background: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 1rem; margin-bottom: 1rem; }
-    h1 { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; }
-    button { padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; font-family: inherit; }
-    .btn-primary { background: #374151; color: white; }
-    .btn-gray { background: #d1d5db; color: #374151; }
-    .btn-blue { background: #2563eb; color: white; }
-    input, select { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: inherit; margin-bottom: 0.5rem; }
-    .flex { display: flex; gap: 0.5rem; align-items: center; }
-    .flex-between { display: flex; justify-content: space-between; align-items: center; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
-    .space-y > * + * { margin-top: 0.5rem; }
-    .hidden { display: none !important; }
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; overflow: auto; }
-    .modal-content { background: white; border-radius: 0.5rem; max-width: 40rem; width: 100%; box-shadow: 0 20px 25px rgba(0,0,0,0.15); overflow-y: auto; }
-    .modal-header { padding: 1rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
-    .modal-body { padding: 1rem; }
-    .modal-footer { padding: 1rem; border-top: 1px solid #e5e7eb; display: flex; gap: 0.5rem; flex-direction: column; }
-    .wine-card { background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; cursor: pointer; transition: all 0.2s; margin-bottom: 0.5rem; }
-    .wine-card:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-    .wine-name { font-weight: bold; margin-bottom: 0.25rem; }
-    .wine-meta { font-size: 0.75rem; color: #6b7280; }
-    .stars { font-weight: bold; }
-    .tab-btn { padding: 0.5rem 1rem; border: none; cursor: pointer; border-radius: 0.375rem; font-family: inherit; background: #d1d5db; color: #374151; }
-    .tab-active { background: #374151; color: white; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vinkartotek</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-  <div id="debug" class="debug">
-    <strong>DEBUG:</strong>
-    <div id="debugLog" style="font-size: 0.6rem;"></div>
-  </div>
+<div id="root"></div>
 
-  <div class="container">
-    <div class="card">
-      <div class="flex-between">
-        <h1>🗂 Vinkartotek</h1>
-        <div class="flex">
-          <button class="btn-primary" id="addBtn">+</button>
-          <button class="btn-primary" id="refreshBtn">↻</button>
-        </div>
-      </div>
-      
-      <div class="flex" style="margin-bottom: 1rem;">
-        <button class="tab-btn tab-active" id="tabList">Utforsk</button>
-        <button class="tab-btn" id="tabStats">Statistikk</button>
-      </div>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-      <div id="listView">
-        <div class="space-y" style="margin-bottom: 1rem;">
-          <input type="text" id="searchInput" placeholder="Søk..." />
-          <div class="grid-3">
-            <select id="filterType">
-              <option value="">Alle typer</option>
-              <option value="Rødvin">Rødvin</option>
-              <option value="Hvitvin">Hvitvin</option>
-              <option value="Rosévin">Rosévin</option>
-            </select>
-            <select id="filterQuality">
-              <option value="">Alle stjerner</option>
-            </select>
-            <select id="sortBy">
-              <option value="newest">Nyeste først</option>
-              <option value="quality">Kvalitet</option>
-            </select>
-          </div>
-          <select id="filterCountry">
-            <option value="">Alle land</option>
-          </select>
-          <button class="btn-gray" id="resetBtn">Nullstill</button>
-        </div>
-      </div>
+<script type="text/babel">
+const { useState, useEffect } = React;
 
-      <div id="statsView" class="hidden">
-        <div class="space-y">
-          <div style="background: #f0f0f0; padding: 1rem; border-radius: 0.5rem;">
-            <div style="font-size: 2rem; font-weight: bold; color: #374151;">1706</div>
-            <div style="font-size: 0.875rem; color: #6b7280;">Totalt viner</div>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div style="background: #f0f0f0; padding: 1rem; border-radius: 0.5rem;">
-              <div style="font-size: 1.5rem; font-weight: bold; color: #374151;" id="statCountries">-</div>
-              <div style="font-size: 0.875rem; color: #6b7280;">Land</div>
-            </div>
-            <div style="background: #f0f0f0; padding: 1rem; border-radius: 0.5rem;">
-              <div style="font-size: 1.5rem; font-weight: bold; color: #374151;" id="statTypes">-</div>
-              <div style="font-size: 0.875rem; color: #6b7280;">Typer vin</div>
-            </div>
-          </div>
-          <div id="topCountries" style="background: #f0f0f0; padding: 1rem; border-radius: 0.5rem;">
-            <h3>Topp 10 land</h3>
-            <div id="topCountriesList" style="font-size: 0.875rem; margin-top: 0.5rem;"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+const SHEET_ID = '1QagDAoCbeuAneC0H37PhIVncqUxIslH8lrchBgyfhnA';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyX1qUO2jWSAynR65Ik5c35mp7dyWJMkSSQelRtbmFOyLGsYlS2_8jCoaLNUW9WZVA/exec';
 
-    <div id="wineList"></div>
-  </div>
+// Helper function to format date from Google Sheets
+const formatDate = (dateValue) => {
+if (!dateValue) return '';
+if (typeof dateValue === 'string' && dateValue.includes('-')) return dateValue;
+if (typeof dateValue === 'string' && dateValue.startsWith('Date(')) {
+const match = dateValue.match(/Date\((\d+),(\d+),(\d+)\)/);
+if (match) {
+const year = parseInt(match[1]);
+const month = String(parseInt(match[2]) + 1).padStart(2, '0');
+const day = String(parseInt(match[3])).padStart(2, '0');
+return `${year}-${month}-${day}`;
+}
+}
+return dateValue;
+};
 
-  <div id="detailsModal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="detailsName"></h2>
-        <button style="background: none; border: none; font-size: 1.5rem; cursor: pointer;" id="closeDetailsBtn">×</button>
-      </div>
-      <div class="modal-body" id="detailsBody"></div>
-      <div class="modal-footer">
-        <button class="btn-blue" id="editBtn">✎ Rediger</button>
-        <button class="btn-gray">Lukk</button>
-      </div>
-    </div>
-  </div>
+// Helper function to convert date to Norwegian format (dd.mm.yyyy)
+const toNorwegianDate = (dateString) => {
+if (!dateString) return '';
+const date = new Date(dateString);
+if (isNaN(date.getTime())) return dateString;
+const day = String(date.getDate()).padStart(2, '0');
+const month = String(date.getMonth() + 1).padStart(2, '0');
+const year = date.getFullYear();
+return `${day}.${month}.${year}`;
+};
 
-  <script>
-    const SHEET_ID = '1QagDAoCbeuAneC0H37PhIVncqUxIslH8lrchBgyfhnA';
-    let wines = [];
-    let selectedWine = null;
+function App() {
+const [wines, setWines] = useState([]);
+const [view, setView] = useState('list');
+const [search, setSearch] = useState('');
+const [sortBy, setSortBy] = useState('newest');
+const [filterWineType, setFilterWineType] = useState('');
+const [filterQuality, setFilterQuality] = useState('');
+const [filterCountry, setFilterCountry] = useState('');
+const [filterRegion, setFilterRegion] = useState('');
+const [filterSubRegion, setFilterSubRegion] = useState('');
+const [showForm, setShowForm] = useState(false);
+const [showDetails, setShowDetails] = useState(false);
+const [selectedWine, setSelectedWine] = useState(null);
+const [editId, setEditId] = useState(null);
+const [saving, setSaving] = useState(false);
+const [loading, setLoading] = useState(false);
+const [statsCountryFilter, setStatsCountryFilter] = useState('');
+const [statsRegionFilter, setStatsRegionFilter] = useState('');
+const [form, setForm] = useState({
+name: '', url: '', wineType: '', dateTasted: new Date().toISOString().split('T')[0],
+country: '', region: '', subRegion: '', grapes: '',
+sightClarity: '', sightIntensity: '', sightColor: '',
+noseCondition: '', noseIntensity: '', noseAroma: '',
+sweetness: '', acid: '', tannin: '', body: '', taste: '', length: '', quality: ''
+});
 
-    function debug(msg) {
-      const log = document.getElementById('debugLog');
-      const line = document.createElement('div');
-      line.textContent = msg;
-      log.appendChild(line);
-      if (log.children.length > 10) log.removeChild(log.firstChild);
-    }
+// Password protection for editing
+const checkPassword = () => {
+const authorized = localStorage.getItem('vinkartotek_auth');
+if (authorized === 'true') {
+return true;
+}
+const password = prompt('Passord påkrevd for å gjøre endringer:');
+if (password === 'Arteta') {
+localStorage.setItem('vinkartotek_auth', 'true');
+return true;
+}
+alert('Feil passord');
+return false;
+};
 
-    debug('Started');
+// Smart scroll function - only scrolls if field is not fully visible
+const handleFieldFocus = (e) => {
+const modal = document.getElementById('formModal');
+if (!modal) return;
 
-    const formatDate = (dateValue) => {
-      if (!dateValue) return '';
-      // Handle Date objects from Google Sheets
-      if (dateValue instanceof Date) {
-        const year = dateValue.getFullYear();
-        const month = String(dateValue.getMonth() + 1).padStart(2, '0');
-        const day = String(dateValue.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      }
-      // Handle strings
-      if (typeof dateValue === 'string' && dateValue.includes('-')) return dateValue;
-      return dateValue;
-    };
+const rect = e.target.getBoundingClientRect();
+const modalRect = modal.getBoundingClientRect();
+const relativeTop = rect.top - modalRect.top;
+const relativeBottom = rect.bottom - modalRect.top;
 
-    const toNorwegianDate = (dateString) => {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}.${month}.${year}`;
-    };
+// Scroll if field is cut off at bottom (within 100px of modal edge) or too close to top
+if (relativeBottom > modal.clientHeight - 100 || relativeTop < 80) {
+modal.scrollTop += relativeTop - 100;
+}
+};
 
-    const loadData = async () => {
-      debug('Loading data...');
-      try {
-        const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
-        const t = await r.text();
-        const j = JSON.parse(t.substring(47).slice(0, -2));
-        
-        wines = j.table.rows.map((row, i) => {
-          let qualityValue = '';
-          if (row.c[20]?.v !== null && row.c[20]?.v !== undefined) {
-            qualityValue = String(row.c[20].v);
-            if (qualityValue.startsWith("'")) qualityValue = qualityValue.substring(1);
-          }
-          return {
-            id: i + 1,
-            name: row.c[0]?.v || '',
-            url: row.c[1]?.v || '',
-            wineType: row.c[2]?.v || '',
-            dateTasted: formatDate(row.c[3]?.v) || '',
-            country: row.c[4]?.v || '',
-            region: row.c[5]?.v || '',
-            subRegion: row.c[6]?.v || '',
-            grapes: row.c[7]?.v || '',
-            quality: qualityValue
-          };
-        });
-        
-        debug('Loaded ' + wines.length + ' wines');
-        updateFilters();
-        render();
-      } catch (e) {
-        debug('Error: ' + e.message);
-      }
-    };
+useEffect(() => { loadData(); }, []);
 
-    const updateFilters = () => {
-      const qualities = [...new Set(wines.map(w => w.quality).filter(Boolean))].sort((a, b) => parseFloat(b) - parseFloat(a));
-      const countries = [...new Set(wines.map(w => w.country).filter(Boolean))].sort();
-      
-      document.getElementById('filterQuality').innerHTML = '<option value="">Alle stjerner</option>' + 
-        qualities.map(q => `<option value="${q}">${q}★</option>`).join('');
-      
-      document.getElementById('filterCountry').innerHTML = '<option value="">Alle land</option>' + 
-        countries.map(c => `<option value="${c}">${c}</option>`).join('');
-    };
+const loadData = async () => {
+setLoading(true);
+try {
+const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
+const t = await r.text();
+const j = JSON.parse(t.substring(47).slice(0, -2));
+const ws = j.table.rows.slice(0).map((row, i) => {
+// Parse quality - strip leading single quote if present
+let qualityValue = '';
+if (row.c[20]?.v !== null && row.c[20]?.v !== undefined) {
+qualityValue = String(row.c[20].v);
+// Remove leading single quote if present
+if (qualityValue.startsWith("'")) {
+qualityValue = qualityValue.substring(1);
+}
+} else if (row.c[20]?.f) {
+qualityValue = row.c[20].f;
+if (qualityValue.startsWith("'")) {
+qualityValue = qualityValue.substring(1);
+}
+}
 
-    const render = () => {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const type = document.getElementById('filterType').value;
-      const quality = document.getElementById('filterQuality').value;
-      const country = document.getElementById('filterCountry').value;
-      const sort = document.getElementById('sortBy').value || 'newest';
-      
-      let filtered = wines.filter(w => {
-        const matchSearch = Object.values(w).some(v => String(v).toLowerCase().includes(search));
-        const matchType = !type || w.wineType === type;
-        const matchQuality = !quality || w.quality === quality;
-        const matchCountry = !country || w.country === country;
-        return matchSearch && matchType && matchQuality && matchCountry;
-      });
+return {
+id: i + 1,
+name: row.c[0]?.v || '', url: row.c[1]?.v || '', wineType: row.c[2]?.v || '',
+dateTasted: formatDate(row.c[3]?.v) || '', country: row.c[4]?.v || '', region: row.c[5]?.v || '',
+subRegion: row.c[6]?.v || '', grapes: row.c[7]?.v || '',
+sightClarity: row.c[8]?.v || '', sightIntensity: row.c[9]?.v || '', sightColor: row.c[10]?.v || '',
+noseCondition: row.c[11]?.v || '', noseIntensity: row.c[12]?.v || '', noseAroma: row.c[13]?.v || '',
+sweetness: row.c[14]?.v || '', acid: row.c[15]?.v || '', tannin: row.c[16]?.v || '',
+body: row.c[17]?.v || '', taste: row.c[18]?.v || '', length: row.c[19]?.v || '', quality: qualityValue
+};
+});
+setWines(ws);
+} catch (e) { alert('Feil: ' + e.message); }
+finally { setLoading(false); }
+};
 
-      if (sort === 'newest') {
-        filtered.sort((a, b) => {
-          const dateA = new Date(a.dateTasted || 0);
-          const dateB = new Date(b.dateTasted || 0);
-          if (dateB.getTime() !== dateA.getTime()) return dateB - dateA;
-          return b.id - a.id;
-        });
-      } else if (sort === 'quality') {
-        filtered.sort((a, b) => parseFloat(b.quality || 0) - parseFloat(a.quality || 0));
-      }
+const save = async () => {
+if (!form.name) { alert('Navn påkrevd'); return; }
+if (saving) return;
 
-      const list = document.getElementById('wineList');
-      list.innerHTML = '';
-      
-      filtered.forEach(w => {
-        const card = document.createElement('div');
-        card.className = 'wine-card';
-        
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'wine-name';
-        nameDiv.textContent = w.name;
-        
-        const metaDiv = document.createElement('div');
-        metaDiv.className = 'wine-meta';
-        metaDiv.textContent = `${w.wineType} · ${w.country} · ${toNorwegianDate(w.dateTasted)}`;
-        
-        const actionDiv = document.createElement('div');
-        actionDiv.className = 'flex-between';
-        actionDiv.style.marginTop = '0.5rem';
-        
-        const starsSpan = document.createElement('span');
-        starsSpan.className = 'stars';
-        starsSpan.textContent = w.quality ? w.quality + '★' : '';
-        
-        actionDiv.appendChild(starsSpan);
-        
-        if (w.url) {
-          const link = document.createElement('a');
-          link.href = w.url;
-          link.target = '_blank';
-          link.textContent = '🔗';
-          link.style.textDecoration = 'none';
-          actionDiv.appendChild(link);
-        }
-        
-        card.appendChild(nameDiv);
-        card.appendChild(metaDiv);
-        card.appendChild(actionDiv);
-        
-        card.onclick = () => {
-          selectedWine = w;
-          document.getElementById('detailsName').textContent = w.name;
-          
-          const body = document.getElementById('detailsBody');
-          body.innerHTML = '';
-          if (w.wineType) body.innerHTML += `<p><strong>Type:</strong> ${w.wineType}</p>`;
-          if (w.dateTasted) body.innerHTML += `<p><strong>Dato smakt:</strong> ${toNorwegianDate(w.dateTasted)}</p>`;
-          if (w.country) body.innerHTML += `<p><strong>Land:</strong> ${w.country}</p>`;
-          if (w.region) body.innerHTML += `<p><strong>Region:</strong> ${w.region}</p>`;
-          if (w.subRegion) body.innerHTML += `<p><strong>Underregion:</strong> ${w.subRegion}</p>`;
-          if (w.grapes) body.innerHTML += `<p><strong>Druer:</strong> ${w.grapes}</p>`;
-          if (w.quality) body.innerHTML += `<p><strong>Kvalitet:</strong> ${w.quality}★</p>`;
-          if (w.url) body.innerHTML += `<p><a href="${w.url}" target="_blank">🔗 Åpne vin</a></p>`;
-          
-          document.getElementById('detailsModal').classList.remove('hidden');
-        };
-        
-        list.appendChild(card);
-      });
-    };
+setSaving(true);
+try {
+const body = editId ? {
+action: 'update',
+originalName: wines.find(w => w.id === editId).name,
+originalDate: wines.find(w => w.id === editId).dateTasted,
+...form
+} : { action: 'add', ...form };
 
-    // Event listeners
-    // Event listeners
-    document.getElementById('closeDetailsBtn').addEventListener('click', () => {
-      document.getElementById('detailsModal').classList.add('hidden');
-    });
+const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
+const res = await r.json();
 
-    document.getElementById('searchInput').addEventListener('input', render);
-    document.getElementById('filterType').addEventListener('change', render);
-    document.getElementById('filterQuality').addEventListener('change', render);
-    document.getElementById('sortBy').addEventListener('change', render);
-    document.getElementById('filterCountry').addEventListener('change', render);
-    
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('filterType').value = '';
-      document.getElementById('filterQuality').value = '';
-      document.getElementById('filterCountry').value = '';
-      document.getElementById('sortBy').value = 'newest';
-      render();
-    });
+if (res.success) {
+if (editId) setWines(wines.map(w => w.id === editId ? { ...form, id: editId } : w));
+else setWines([...wines, { ...form, id: Date.now() }]);
+setForm({
+name: '', url: '', wineType: '', dateTasted: new Date().toISOString().split('T')[0],
+country: '', region: '', subRegion: '', grapes: '',
+sightClarity: '', sightIntensity: '', sightColor: '',
+noseCondition: '', noseIntensity: '', noseAroma: '',
+sweetness: '', acid: '', tannin: '', body: '', taste: '', length: '', quality: ''
+});
+setShowForm(false);
+setEditId(null);
+} else alert('Feil: ' + res.message);
+} catch (e) { alert('Feil: ' + e.message); }
+finally { setSaving(false); }
+};
 
-    document.getElementById('tabList').addEventListener('click', () => {
-      document.getElementById('listView').classList.remove('hidden');
-      document.getElementById('statsView').classList.add('hidden');
-      document.getElementById('tabList').classList.add('tab-active');
-      document.getElementById('tabStats').classList.remove('tab-active');
-    });
+const del = async (id) => {
+if (!checkPassword()) return;
+if (!confirm('Slette?')) return;
+try {
+const w = wines.find(w => w.id === id);
+const r = await fetch(SCRIPT_URL, {
+method: 'POST',
+body: JSON.stringify({ action: 'delete', name: w.name, dateTasted: w.dateTasted })
+});
+const res = await r.json();
+if (res.success) { setWines(wines.filter(x => x.id !== id)); alert('Slettet!'); }
+else alert('Feil: ' + res.message);
+} catch (e) { alert('Feil: ' + e.message); }
+};
 
-    document.getElementById('tabStats').addEventListener('click', () => {
-      document.getElementById('listView').classList.add('hidden');
-      document.getElementById('statsView').classList.remove('hidden');
-      document.getElementById('tabStats').classList.add('tab-active');
-      document.getElementById('tabList').classList.remove('tab-active');
-      updateStats();
-    });
+const filtered = wines.filter(w => {
+const matchesSearch = Object.values(w).some(v => String(v).toLowerCase().includes(search.toLowerCase()));
+const matchesWineType = !filterWineType || w.wineType === filterWineType;
+const matchesQuality = !filterQuality || w.quality === filterQuality;
+const matchesCountry = !filterCountry || w.country === filterCountry;
+const matchesRegion = !filterRegion || w.region === filterRegion;
+const matchesSubRegion = !filterSubRegion || w.subRegion === filterSubRegion;
+return matchesSearch && matchesWineType && matchesQuality && matchesCountry && matchesRegion && matchesSubRegion;
+});
 
-    const updateStats = () => {
-      const countries = [...new Set(wines.map(w => w.country).filter(Boolean))];
-      const types = [...new Set(wines.map(w => w.wineType).filter(Boolean))];
-      
-      document.getElementById('statCountries').textContent = countries.length;
-      document.getElementById('statTypes').textContent = types.length;
-      
-      // Top 10 countries
-      const countryStats = {};
-      wines.forEach(w => {
-        if (w.country) {
-          if (!countryStats[w.country]) countryStats[w.country] = { count: 0, totalQuality: 0 };
-          countryStats[w.country].count++;
-          if (w.quality) countryStats[w.country].totalQuality += parseFloat(w.quality);
-        }
-      });
-      
-      const topCountries = Object.entries(countryStats)
-        .map(([country, stats]) => ({
-          country,
-          count: stats.count,
-          avg: (stats.totalQuality / stats.count).toFixed(1)
-        }))
-        .sort((a, b) => b.avg - a.avg)
-        .slice(0, 10);
-      
-      const countriesList = document.getElementById('topCountriesList');
-      countriesList.innerHTML = topCountries.map(c => 
-        `<div>${c.country}: ${c.avg}★ (${c.count} viner)</div>`
-      ).join('');
-    };
+const uniqueCountries = [...new Set(wines.map(w => w.country).filter(Boolean))].sort();
+const uniqueQualities = [...new Set(wines.map(w => w.quality).filter(Boolean))].sort((a, b) => parseFloat(b) - parseFloat(a));
 
-    document.getElementById('refreshBtn').addEventListener('click', loadData);
-    document.getElementById('addBtn').addEventListener('click', () => debug('Add clicked'));
+const uniqueRegions = filterCountry 
+? [...new Set(wines.filter(w => w.country === filterCountry).map(w => w.region).filter(Boolean))].sort()
+: [];
 
-    loadData();
-  </script>
+const uniqueSubRegions = filterRegion 
+? [...new Set(wines.filter(w => w.country === filterCountry && w.region === filterRegion).map(w => w.subRegion).filter(Boolean))].sort()
+: [];
+
+const sorted = [...filtered].sort((a, b) => {
+if (sortBy === 'newest') {
+const dateA = new Date(a.dateTasted || 0);
+const dateB = new Date(b.dateTasted || 0);
+if (dateB.getTime() !== dateA.getTime()) {
+return dateB - dateA;
+}
+return b.id - a.id;
+}
+if (sortBy === 'quality') {
+const qa = parseFloat(a.quality) || 0;
+const qb = parseFloat(b.quality) || 0;
+return qb - qa;
+}
+if (sortBy === 'country') return (a.country || '').localeCompare(b.country || '');
+if (sortBy === 'wineType') return (a.wineType || '').localeCompare(b.wineType || '');
+return 0;
+});
+
+return (
+<div className="min-h-screen bg-gradient-to-br from-stone-50 to-gray-100 p-6">
+<div className="max-w-7xl mx-auto">
+<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+<div className="flex items-center justify-between mb-6">
+<h1 className="text-3xl font-bold">🗂 Vinkartotek</h1>
+<div className="flex gap-2">
+<button onClick={() => { if (checkPassword()) setShowForm(true); }} className="bg-slate-700 text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 text-sm">+</button>
+<button 
+onClick={() => { loadData(); }} 
+disabled={loading}
+className={`bg-slate-600 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700 text-sm ${loading ? 'opacity-50' : ''}`}
+>
+<span className={loading ? 'inline-block animate-spin' : ''}>↻</span>
+</button>
+</div>
+</div>
+
+<div className="flex gap-2 mb-6">
+<button onClick={() => setView('list')} className={`px-3 py-1.5 rounded-lg text-sm ${view === 'list' ? 'bg-slate-700 text-white' : 'bg-gray-200'}`}>Utforsk</button>
+<button onClick={() => setView('stats')} className={`px-3 py-1.5 rounded-lg text-sm ${view === 'stats' ? 'bg-slate-700 text-white' : 'bg-gray-200'}`}>Statistikk</button>
+</div>
+
+{view === 'list' && (
+<div className="space-y-4">
+<div className="relative">
+<input type="text" placeholder="Søk..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full px-3 py-2 border rounded-lg pr-10 text-sm" />
+{search && (
+<button 
+onClick={() => setSearch('')}
+className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl"
+>
+×
+</button>
+)}
+</div>
+<div className="grid grid-cols-3 gap-2">
+<select value={filterWineType} onChange={(e) => setFilterWineType(e.target.value)} className="px-3 py-2 border rounded-lg text-sm">
+<option value="">Alle typer</option>
+<option value="Rødvin">Rødvin</option>
+<option value="Hvitvin">Hvitvin</option>
+<option value="Rosévin">Rosévin</option>
+<option value="Orangevin">Orangevin</option>
+<option value="Musserende vin">Musserende vin</option>
+<option value="Musserende rosévin">Musserende rosévin</option>
+<option value="Dessertvin">Dessertvin</option>
+</select>
+<select value={filterQuality} onChange={(e) => setFilterQuality(e.target.value)} className="px-3 py-2 border rounded-lg text-sm">
+<option value="">Alle stjerner</option>
+{uniqueQualities.map(q => (
+<option key={q} value={q}>{q}★</option>
+))}
+</select>
+<select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-3 py-2 border rounded-lg text-sm">
+<option value="newest">Nyeste først</option>
+<option value="quality">Kvalitet</option>
+<option value="country">Land</option>
+<option value="wineType">Type vin</option>
+</select>
+</div>
+<div className="grid grid-cols-3 gap-4">
+<select 
+value={filterCountry} 
+onChange={(e) => {
+setFilterCountry(e.target.value);
+setFilterRegion('');
+setFilterSubRegion('');
+}} 
+className="px-3 py-2 border rounded-lg text-sm"
+>
+<option value="">Alle land</option>
+{uniqueCountries.map(country => (
+<option key={country} value={country}>{country}</option>
+))}
+</select>
+<select 
+value={filterRegion} 
+onChange={(e) => {
+setFilterRegion(e.target.value);
+setFilterSubRegion('');
+}}
+disabled={!filterCountry}
+className={`px-4 py-3 border rounded-lg ${!filterCountry ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+>
+<option value="">Alle regioner</option>
+{uniqueRegions.map(region => (
+<option key={region} value={region}>{region}</option>
+))}
+</select>
+<select 
+value={filterSubRegion} 
+onChange={(e) => setFilterSubRegion(e.target.value)}
+disabled={!filterRegion}
+className={`px-4 py-3 border rounded-lg ${!filterRegion ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+>
+<option value="">Alle underregioner</option>
+{uniqueSubRegions.map(subRegion => (
+<option key={subRegion} value={subRegion}>{subRegion}</option>
+))}
+</select>
+</div>
+<div className="flex justify-end">
+<button 
+onClick={() => {
+setSearch('');
+setFilterWineType('');
+setFilterQuality('');
+setFilterCountry('');
+setFilterRegion('');
+setFilterSubRegion('');
+setSortBy('newest');
+}}
+className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
+>
+Nullstill
+</button>
+</div>
+</div>
+)}
+
+{view === 'list' && (
+<div className="space-y-4">
+<div className="text-center py-2">
+<span className="text-lg font-semibold text-gray-700">{sorted.length} {sorted.length === 1 ? 'vin' : 'viner'}</span>
+</div>
+{sorted.length === 0 ? (
+<div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+{wines.length === 0 ? 'Ingen viner' : 'Ingen match'}
+</div>
+) : (
+sorted.map(w => (
+<div key={w.id} className="bg-white rounded-lg shadow-lg p-3 cursor-pointer hover:shadow-xl transition-shadow" onClick={() => { setSelectedWine(w); setShowDetails(true); }}>
+<div className="mb-2">
+<h3 className="text-lg font-bold">{w.name}</h3>
+<div className="text-xs">
+{w.wineType && <span className="mr-4 text-gray-900">{w.wineType}</span>}
+{w.country && <span className="text-gray-700">{w.country}</span>}
+{w.region && <span className="ml-2 text-gray-600">{w.region}</span>}
+{w.subRegion && <span className="ml-2 text-gray-500">{w.subRegion}</span>}
+{w.dateTasted && <span className="ml-4 text-gray-600">{toNorwegianDate(w.dateTasted)}</span>}
+</div>
+</div>
+<div className="flex justify-between items-center">
+{w.quality && (
+<div>
+<span className="text-slate-700 font-bold text-base">
+{(() => {
+const rating = parseFloat(w.quality) || 0;
+let stars = '';
+for (let i = 1; i <= 5; i++) {
+if (rating >= i) stars += '★';
+else if (rating >= i - 0.5) stars += '½';
+else stars += '☆';
+}
+return stars;
+})()}
+</span>
+</div>
+)}
+<div className="flex gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+{w.url && <a href={w.url} target="_blank" className="w-8 h-8 flex items-center justify-center text-purple-600">🔗</a>}
+<button onClick={(e) => { e.stopPropagation(); if (checkPassword()) { setForm(w); setEditId(w.id); setShowForm(true); } }} className="w-8 h-8 bg-slate-700 text-white rounded-lg hover:bg-slate-800 text-sm flex items-center justify-center flex-shrink-0">✎</button>
+<button onClick={(e) => { e.stopPropagation(); del(w.id); }} className="w-8 h-8 bg-slate-600 text-white rounded-lg hover:bg-slate-700 text-sm flex items-center justify-center flex-shrink-0">✕</button>
+</div>
+</div>
+</div>
+))
+)}
+</div>
+)}
+
+{view === 'stats' && (
+<div className="space-y-6">
+{(() => {
+const statsWines = wines.filter(w => {
+if (statsCountryFilter && w.country !== statsCountryFilter) return false;
+if (statsRegionFilter && w.region !== statsRegionFilter) return false;
+return true;
+});
+
+return (
+<>
+<div className="bg-white rounded-lg shadow-lg p-6">
+<h3 className="text-xl font-bold mb-4">Sammendrag</h3>
+<p className="text-3xl font-bold text-slate-700">{statsWines.length}</p>
+<p>Totalt viner</p>
+</div>
+
+{(() => {
+const countryCounts = {};
+wines.forEach(w => {
+if (w.country) countryCounts[w.country] = (countryCounts[w.country] || 0) + 1;
+});
+const countries = Object.entries(countryCounts)
+.sort((a, b) => b[1] - a[1])
+.map(([country]) => country);
+
+let regions = [];
+if (statsCountryFilter) {
+const regionCounts = {};
+wines.filter(w => w.country === statsCountryFilter).forEach(w => {
+if (w.region) regionCounts[w.region] = (regionCounts[w.region] || 0) + 1;
+});
+regions = Object.entries(regionCounts)
+.sort((a, b) => b[1] - a[1])
+.map(([region]) => region);
+}
+
+let chartTitle = 'Land';
+let chartData = {};
+
+if (!statsCountryFilter) {
+statsWines.forEach(w => {
+if (w.country) {
+chartData[w.country] = (chartData[w.country] || 0) + 1;
+}
+});
+} else if (!statsRegionFilter) {
+chartTitle = `Regioner i ${statsCountryFilter}`;
+statsWines.forEach(w => {
+const key = w.region || 'Ingen region';
+chartData[key] = (chartData[key] || 0) + 1;
+});
+} else {
+chartTitle = `Underregioner i ${statsRegionFilter}`;
+statsWines.forEach(w => {
+const key = w.subRegion || 'Ingen underregion';
+chartData[key] = (chartData[key] || 0) + 1;
+});
+}
+
+const data = Object.entries(chartData).sort((a, b) => b[1] - a[1]);
+const total = data.reduce((sum, [, count]) => sum + count, 0);
+
+return data.length > 0 && (
+<div className="bg-white rounded-lg shadow-lg p-6">
+<div className="flex items-center justify-between mb-4">
+<div className="flex items-center gap-4">
+<h3 className="text-xl font-bold">{chartTitle} ({data.length})</h3>
+<select 
+value={statsCountryFilter} 
+onChange={(e) => { 
+setStatsCountryFilter(e.target.value); 
+setStatsRegionFilter(''); 
+}} 
+className="px-3 py-1 border rounded text-sm"
+>
+<option value="">Alle land</option>
+{countries.map(c => (
+<option key={c} value={c}>{c}</option>
+))}
+</select>
+{statsCountryFilter && (
+<select 
+value={statsRegionFilter} 
+onChange={(e) => setStatsRegionFilter(e.target.value)} 
+className="px-3 py-1 border rounded text-sm"
+>
+<option value="">Alle regioner</option>
+{regions.map(r => (
+<option key={r} value={r}>{r}</option>
+))}
+</select>
+)}
+</div>
+<button
+onClick={() => {
+const csv = 'Navn,Antall,Prosent\n' + data.map(([name, count]) => 
+`"${name}",${count},${Math.round(count/total*100)}%`
+).join('\n');
+const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = `${chartTitle.replace(/ /g, '_')}.csv`;
+link.click();
+}}
+className="px-3 py-1 bg-slate-600 text-white rounded text-sm hover:bg-slate-700"
+>
+Eksporter
+</button>
+</div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+<div>
+<ul className="space-y-2">
+{data.map(([name, count], idx) => {
+const colors = ['#dc2626', '#ea580c', '#d97706', '#ca8a04', '#65a30d', '#16a34a', '#059669', '#0d9488', '#0891b2', '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#c026d3', '#db2777', '#e11d48', '#b91c1c', '#c2410c', '#b45309'];
+return (
+<li key={name} className="flex justify-between items-center gap-2">
+<div className="flex items-center gap-2 flex-1">
+<span className="w-3 h-3 rounded-sm flex-shrink-0" style={{backgroundColor: colors[idx % colors.length]}}></span>
+<span>{name}</span>
+</div>
+<span className="font-semibold whitespace-nowrap">{count} ({Math.round(count/total*100)}%)</span>
+</li>
+);
+})}
+</ul>
+</div>
+<div className="flex items-start justify-center">
+<svg viewBox="0 0 200 200" className="w-96 h-96">
+{(() => {
+let currentAngle = 0;
+const colors = ['#dc2626', '#ea580c', '#d97706', '#ca8a04', '#65a30d', '#16a34a', '#059669', '#0d9488', '#0891b2', '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#c026d3', '#db2777', '#e11d48', '#b91c1c', '#c2410c', '#b45309'];
+const segments = [];
+data.forEach(([name, count], idx) => {
+const percentage = count / total;
+const angle = percentage * 360;
+const endAngle = currentAngle + angle;
+const x1 = 100 + 80 * Math.cos((currentAngle - 90) * Math.PI / 180);
+const y1 = 100 + 80 * Math.sin((currentAngle - 90) * Math.PI / 180);
+const x2 = 100 + 80 * Math.cos((endAngle - 90) * Math.PI / 180);
+const y2 = 100 + 80 * Math.sin((endAngle - 90) * Math.PI / 180);
+const largeArc = angle > 180 ? 1 : 0;
+const path = `M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+const midAngle = (currentAngle + endAngle) / 2;
+const labelX = 100 + 50 * Math.cos((midAngle - 90) * Math.PI / 180);
+const labelY = 100 + 50 * Math.sin((midAngle - 90) * Math.PI / 180);
+
+segments.push(
+<g key={name}>
+<path d={path} fill={colors[idx % colors.length]} />
+{percentage > 0.05 && <text x={labelX} y={labelY} fontSize="9" fill="white" textAnchor="middle" fontWeight="bold">{name}</text>}
+</g>
+);
+currentAngle = endAngle;
+});
+return segments;
+})()}
+</svg>
+</div>
+</div>
+</div>
+);
+})()}
+</>
+);
+})()}
+</div>
+)}
+
+{showDetails && selectedWine && (
+<div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-auto">
+<div className="bg-white rounded-lg shadow-xl max-w-3xl w-full my-8 max-h-screen overflow-y-auto">
+<div className="sticky top-0 bg-white px-6 py-4 border-b flex justify-between items-center">
+<div className="flex items-center gap-2">
+<h2 className="text-xl font-bold">{selectedWine.name}</h2>
+{selectedWine.url && (
+<a href={selectedWine.url} target="_blank" className="text-purple-600 hover:text-purple-700">🔗</a>
+)}
+</div>
+<button onClick={() => { setShowDetails(false); setSelectedWine(null); }} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
+</div>
+<div className="px-6 py-4 space-y-3">
+<div className="grid grid-cols-4 gap-x-4 gap-y-2 text-sm">
+{selectedWine.wineType && (
+<>
+<div className="text-gray-500">Type vin</div>
+<div className="col-span-3">{selectedWine.wineType}</div>
+</>
+)}
+{selectedWine.dateTasted && (
+<>
+<div className="text-gray-500">Dato smakt</div>
+<div className="col-span-3">{toNorwegianDate(selectedWine.dateTasted)}</div>
+</>
+)}
+{selectedWine.country && (
+<>
+<div className="text-gray-500">Land</div>
+<div className="col-span-3">{selectedWine.country}</div>
+</>
+)}
+{selectedWine.region && (
+<>
+<div className="text-gray-500">Region</div>
+<div className="col-span-3">{selectedWine.region}</div>
+</>
+)}
+{selectedWine.subRegion && (
+<>
+<div className="text-gray-500">Underregion</div>
+<div className="col-span-3">{selectedWine.subRegion}</div>
+</>
+)}
+{selectedWine.grapes && (
+<>
+<div className="text-gray-500">Druer</div>
+<div className="col-span-3">{selectedWine.grapes}</div>
+</>
+)}
+</div>
+{(selectedWine.sightClarity || selectedWine.sightIntensity || selectedWine.sightColor) && (
+<div className="pt-2">
+<h3 className="text-sm font-semibold text-gray-700 mb-2">Utseende</h3>
+<div className="grid grid-cols-4 gap-x-4 gap-y-2 text-sm">
+{selectedWine.sightClarity && (
+<>
+<div className="text-gray-500">Klarhet</div>
+<div className="col-span-3">{selectedWine.sightClarity}</div>
+</>
+)}
+{selectedWine.sightIntensity && (
+<>
+<div className="text-gray-500">Intensitet</div>
+<div className="col-span-3">{selectedWine.sightIntensity}</div>
+</>
+)}
+{selectedWine.sightColor && (
+<>
+<div className="text-gray-500">Farge</div>
+<div className="col-span-3">{selectedWine.sightColor}</div>
+</>
+)}
+</div>
+</div>
+)}
+{(selectedWine.noseCondition || selectedWine.noseIntensity || selectedWine.noseAroma) && (
+<div className="pt-2">
+<h3 className="text-sm font-semibold text-gray-700 mb-2">Duft</h3>
+<div className="grid grid-cols-4 gap-x-4 gap-y-2 text-sm">
+{selectedWine.noseCondition && (
+<>
+<div className="text-gray-500">Tilstand</div>
+<div className="col-span-3">{selectedWine.noseCondition}</div>
+</>
+)}
+{selectedWine.noseIntensity && (
+<>
+<div className="text-gray-500">Intensitet</div>
+<div className="col-span-3">{selectedWine.noseIntensity}</div>
+</>
+)}
+{selectedWine.noseAroma && (
+<>
+<div className="text-gray-500">Aroma</div>
+<div className="col-span-3">{selectedWine.noseAroma}</div>
+</>
+)}
+</div>
+</div>
+)}
+{(selectedWine.sweetness || selectedWine.acid || selectedWine.tannin || selectedWine.body || selectedWine.taste || selectedWine.length) && (
+<div className="pt-2">
+<h3 className="text-sm font-semibold text-gray-700 mb-2">Smak</h3>
+<div className="grid grid-cols-4 gap-x-4 gap-y-2 text-sm">
+{selectedWine.sweetness && (
+<>
+<div className="text-gray-500">Sødme</div>
+<div className="col-span-3">{selectedWine.sweetness}</div>
+</>
+)}
+{selectedWine.acid && (
+<>
+<div className="text-gray-500">Syrlighet</div>
+<div className="col-span-3">{selectedWine.acid}</div>
+</>
+)}
+{selectedWine.tannin && (
+<>
+<div className="text-gray-500">Tannin</div>
+<div className="col-span-3">{selectedWine.tannin}</div>
+</>
+)}
+{selectedWine.body && (
+<>
+<div className="text-gray-500">Kropp</div>
+<div className="col-span-3">{selectedWine.body}</div>
+</>
+)}
+{selectedWine.taste && (
+<>
+<div className="text-gray-500">Smak</div>
+<div className="col-span-3">{selectedWine.taste}</div>
+</>
+)}
+{selectedWine.length && (
+<>
+<div className="text-gray-500">Lengde</div>
+<div className="col-span-3">{selectedWine.length}</div>
+</>
+)}
+</div>
+</div>
+)}
+{selectedWine.quality && (
+<div className="pt-2">
+<div className="text-sm font-semibold text-gray-700 mb-2">Kvalitet</div>
+<div className="flex gap-1 text-2xl text-slate-700">
+{[1,2,3,4,5].map(s => {
+const cr = parseFloat(selectedWine.quality) || 0;
+return (
+<span key={s}>
+{cr >= s ? '★' : cr >= s - 0.5 ? '½' : '☆'}
+</span>
+);
+})}
+</div>
+</div>
+)}
+</div>
+<div className="sticky bottom-0 bg-white flex gap-4 p-6 border-t">
+<button onClick={() => { if (checkPassword()) { setForm(selectedWine); setEditId(selectedWine.id); setShowDetails(false); setShowForm(true); } }} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">✎</button>
+<button onClick={() => { setShowDetails(false); setSelectedWine(null); }} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold">Lukk</button>
+</div>
+</div>
+</div>
+)}
+
+{showForm && (
+<div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 overflow-auto">
+<div className="bg-white rounded-lg shadow-xl max-w-4xl w-full my-4 max-h-screen overflow-y-auto" id="formModal">
+<div className="sticky top-0 bg-white p-3 border-b flex justify-between items-center">
+<h2 className="text-lg font-bold">{editId ? 'Rediger' : 'Ny vin'}</h2>
+<button onClick={() => { setShowForm(false); setEditId(null); }} className="text-2xl">×</button>
+</div>
+<div className="p-3 space-y-3">
+<div className="grid grid-cols-2 gap-2">
+<div>
+<label className="block text-xs font-medium mb-1">Vinnavn *</label>
+<input type="text" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} onFocus={handleFieldFocus} className="w-full px-2 py-1.5 border rounded-lg text-sm" />
+</div>
+<div>
+<label className="block text-xs font-medium mb-1">URL</label>
+<input type="url" value={form.url} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} onFocus={handleFieldFocus} className="w-full px-2 py-1.5 border rounded-lg text-sm" />
+</div>
+</div>
+<div className="grid grid-cols-2 gap-2">
+<div>
+<label className="block text-xs font-medium mb-1">Type vin</label>
+<select value={form.wineType} onChange={(e) => setForm(p => ({ ...p, wineType: e.target.value }))} onFocus={handleFieldFocus} className="w-full px-2 py-1.5 border rounded-lg text-sm">
+<option value="">Velg type</option>
+<option value="Rødvin">Rødvin</option>
+<option value="Hvitvin">Hvitvin</option>
+<option value="Rosévin">Rosévin</option>
+<option value="Orangevin">Orangevin</option>
+<option value="Musserende vin">Musserende vin</option>
+<option value="Musserende rosévin">Musserende rosévin</option>
+<option value="Dessertvin">Dessertvin</option>
+</select>
+</div>
+<div>
+<label className="block text-xs font-medium mb-1">Dato</label>
+<input type="date" value={form.dateTasted} onChange={(e) => setForm(p => ({ ...p, dateTasted: e.target.value }))} onFocus={handleFieldFocus} className="w-full px-2 py-1.5 border rounded-lg text-sm" />
+</div>
+</div>
+<div className="grid grid-cols-3 gap-4">
+<input 
+placeholder="Land" 
+value={form.country} 
+onChange={(e) => setForm(p => ({ ...p, country: e.target.value, region: '', subRegion: '' }))} 
+onFocus={handleFieldFocus} 
+className="px-4 py-2 border rounded-lg"
+list="countries-list"
+/>
+<datalist id="countries-list">
+{[...new Set(wines.map(w => w.country).filter(Boolean))].sort().map(c => (
+<option key={c} value={c} />
+))}
+</datalist>
+<input 
+placeholder="Region" 
+value={form.region} 
+onChange={(e) => setForm(p => ({ ...p, region: e.target.value, subRegion: '' }))} 
+onFocus={handleFieldFocus} 
+className="px-4 py-2 border rounded-lg"
+list="regions-list"
+/>
+<datalist id="regions-list">
+{form.country && [...new Set(wines.filter(w => w.country === form.country).map(w => w.region).filter(Boolean))].sort().map(r => (
+<option key={r} value={r} />
+))}
+</datalist>
+<input 
+placeholder="Underregion" 
+value={form.subRegion} 
+onChange={(e) => setForm(p => ({ ...p, subRegion: e.target.value }))} 
+onFocus={handleFieldFocus} 
+className="px-4 py-2 border rounded-lg"
+list="subregions-list"
+/>
+<datalist id="subregions-list">
+{form.region && [...new Set(wines.filter(w => w.region === form.region).map(w => w.subRegion).filter(Boolean))].sort().map(sr => (
+<option key={sr} value={sr} />
+))}
+</datalist>
+</div>
+<input 
+placeholder="Druer" 
+value={form.grapes} 
+onChange={(e) => setForm(p => ({ ...p, grapes: e.target.value }))} 
+onFocus={handleFieldFocus} 
+className="w-full px-2 py-1.5 border rounded-lg text-sm"
+list="grapes-list"
+/>
+<datalist id="grapes-list">
+{(() => {
+const grapeSet = new Set();
+wines.filter(w => !form.country || w.country === form.country).forEach(w => {
+if (w.grapes) {
+w.grapes.split(',').forEach(g => {
+const grape = g.trim().replace(/\d+(\.\d+)?%/g, '').trim();
+if (grape) grapeSet.add(grape);
+});
+}
+});
+return [...grapeSet].sort().map(g => <option key={g} value={g} />);
+})()}
+</datalist>
+<div>
+<h3 className="font-semibold mb-2">Utseende</h3>
+<div className="grid grid-cols-3 gap-2">
+<input placeholder="Klarhet" value={form.sightClarity} onChange={(e) => setForm(p => ({ ...p, sightClarity: e.target.value }))} onFocus={handleFieldFocus} className="px-3 py-2 border rounded-lg text-sm" />
+<input placeholder="Intensitet" value={form.sightIntensity} onChange={(e) => setForm(p => ({ ...p, sightIntensity: e.target.value }))} onFocus={handleFieldFocus} className="px-3 py-2 border rounded-lg text-sm" />
+<input placeholder="Farge" value={form.sightColor} onChange={(e) => setForm(p => ({ ...p, sightColor: e.target.value }))} onFocus={handleFieldFocus} className="px-3 py-2 border rounded-lg text-sm" />
+</div>
+</div>
+<div>
+<h3 className="font-semibold mb-2">Duft</h3>
+<div className="grid grid-cols-4 gap-2 mb-2">
+<input placeholder="Tilstand" value={form.noseCondition} onChange={(e) => setForm(p => ({ ...p, noseCondition: e.target.value }))} onFocus={handleFieldFocus} className="px-3 py-2 border rounded-lg text-sm self-start" />
+<input placeholder="Intensitet" value={form.noseIntensity} onChange={(e) => setForm(p => ({ ...p, noseIntensity: e.target.value }))} onFocus={handleFieldFocus} className="px-3 py-2 border rounded-lg text-sm self-start" />
+<textarea placeholder="Aroma" value={form.noseAroma} onChange={(e) => setForm(p => ({ ...p, noseAroma: e.target.value }))} onFocus={handleFieldFocus} rows={3} className="px-3 py-2 border rounded-lg text-sm resize-none col-span-2" />
+</div>
+</div>
+<div>
+<h3 className="font-semibold mb-2">Smak</h3>
+<div className="grid grid-cols-4 gap-2 mb-2">
+<input placeholder="Sødme" value={form.sweetness} onChange={(e) => setForm(p => ({ ...p, sweetness: e.target.value }))} onFocus={handleFieldFocus} className="px-3 py-2 border rounded-lg text-sm self-start" />
+<input placeholder="Syrlighet" value={form.acid} onChange={(e) => setForm(p => ({ ...p, acid: e.target.value }))} onFocus={handleFieldFocus} className="px-3 py-2 border rounded-lg text-sm self-start" />
+<input placeholder="Tannin" value={form.tannin} onChange={(e) => setForm(p => ({ ...p, tannin: e.target.value }))} onFocus={handleFieldFocus} className="px-3 py-2 border rounded-lg text-sm self-start" />
+<input placeholder="Kropp" value={form.body} onChange={(e) => setForm(p => ({ ...p, body: e.target.value }))} onFocus={handleFieldFocus} className="px-3 py-2 border rounded-lg text-sm self-start" />
+</div>
+<div className="grid grid-cols-4 gap-2">
+<textarea placeholder="Smak" value={form.taste} onChange={(e) => setForm(p => ({ ...p, taste: e.target.value }))} onFocus={handleFieldFocus} rows={3} className="px-3 py-2 border rounded-lg text-sm resize-none col-span-3" />
+<input placeholder="Lengde" value={form.length} onChange={(e) => setForm(p => ({ ...p, length: e.target.value }))} onFocus={handleFieldFocus} className="px-3 py-2 border rounded-lg text-sm align-top self-start" />
+</div>
+</div>
+<div>
+<label className="block text-xs font-medium mb-1">Kvalitet</label>
+<div className="flex gap-1">
+{[1,2,3,4,5].map(s => {
+const cr = parseFloat(form.quality) || 0;
+return (
+<span key={s} onClick={() => setForm(p => ({ ...p, quality: (cr === s ? s - 0.5 : s).toString() }))} className="text-4xl cursor-pointer select-none">
+{cr >= s ? '★' : cr === s - 0.5 ? '½' : '☆'}
+</span>
+);
+})}
+{form.quality && <span className="ml-2 text-sm">({form.quality})</span>}
+</div>
+<p className="text-xs text-gray-500 mt-1">Klikk for full stjerne. Klikk igjen for halv.</p>
+</div>
+</div>
+<div className="sticky bottom-0 bg-white p-4 border-t">
+<div className="flex flex-col gap-2">
+<button 
+onClick={save} 
+disabled={saving}
+className={`w-full py-2 rounded-lg text-sm font-semibold ${saving ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-800'} text-white`}
+>
+{saving ? 'Lagrer...' : (editId ? 'Oppdater' : 'Legg til')}
+</button>
+<div className="flex gap-2">
+{editId && (
+<button 
+onClick={() => { 
+setShowForm(false); 
+setEditId(null); 
+del(editId); 
+}} 
+className="flex-1 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700"
+>
+✕
+</button>
+)}
+<button onClick={() => { setShowForm(false); setEditId(null); }} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-semibold">Avbryt</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+)}
+</div>
+</div>
+);
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
 </body>
 </html>
