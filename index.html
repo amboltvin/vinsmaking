@@ -527,64 +527,84 @@ function App() {
 
                 <div className="stats-box" style={{marginBottom: '1.5rem'}}>
                   <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Top 10 land etter gjennomsnittlig kvalitet (min 5 viner)</h3>
-                  <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
-                    {(() => {
-                      const countryRatings = {};
-                      filteredWines.forEach(w => {
-                        if (w.country && w.quality) {
-                          if (!countryRatings[w.country]) countryRatings[w.country] = { total: 0, count: 0 };
-                          countryRatings[w.country].total += parseFloat(w.quality);
-                          countryRatings[w.country].count += 1;
-                        }
-                      });
-                      
-                      return Object.entries(countryRatings)
-                        .filter(([_, data]) => data.count >= 5)
-                        .map(([country, data]) => [country, data.total / data.count, data.count])
-                        .sort((a, b) => b[1] - a[1])
-                        .slice(0, 10)
-                        .map(([country, avgRating, count]) => (
-                          <div key={country} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.5rem', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem'}}>
-                            <span>{country}</span>
-                            <div style={{textAlign: 'right'}}>
-                              <div style={{fontWeight: '600'}}>{avgRating.toFixed(2)}★</div>
-                              <div style={{fontSize: '0.75rem', color: '#6b7280'}}>({count} viner)</div>
+                  {(() => {
+                    const countryRatings = {};
+                    filteredWines.forEach(w => {
+                      if (w.country && w.quality) {
+                        if (!countryRatings[w.country]) countryRatings[w.country] = { total: 0, count: 0 };
+                        countryRatings[w.country].total += parseFloat(w.quality);
+                        countryRatings[w.country].count += 1;
+                      }
+                    });
+                    
+                    const topCountries = Object.entries(countryRatings)
+                      .filter(([_, data]) => data.count >= 5)
+                      .map(([country, data]) => [country, data.total / data.count])
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 10);
+
+                    if (topCountries.length === 0) return <div style={{color: '#6b7280'}}>Ingen data</div>;
+
+                    const chartData = Object.fromEntries(topCountries.map(([c, avg]) => [c, Math.round(avg * 10) / 10]));
+                    
+                    return (
+                      <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
+                        <div style={{flex: '0 0 40%'}}>
+                          {topCountries.map(([country, avgRating], i) => (
+                            <div key={country} style={{display: 'flex', alignItems: 'center', marginBottom: '0.75rem', fontSize: '0.875rem'}}>
+                              <div style={{width: '14px', height: '14px', background: ['#374151', '#2563eb', '#9333ea', '#dc2626', '#059669', '#f59e0b', '#0ea5e9', '#8b5cf6', '#ec4899', '#14b8a6'][i % 10], marginRight: '0.75rem', borderRadius: '2px', flexShrink: 0}}></div>
+                              <span style={{flex: 1}}>{country}</span>
+                              <span style={{fontWeight: '600', marginLeft: '0.5rem'}}>{avgRating.toFixed(2)}★</span>
                             </div>
-                          </div>
-                        ));
-                    })()}
-                  </div>
+                          ))}
+                        </div>
+                        <div style={{flex: '0 0 60%', display: 'flex', justifyContent: 'center'}}>
+                          <PieChart data={chartData} colors={['#374151', '#2563eb', '#9333ea', '#dc2626', '#059669', '#f59e0b', '#0ea5e9', '#8b5cf6', '#ec4899', '#14b8a6']} size={280} />
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="stats-box">
                   <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Top 10 regioner etter gjennomsnittlig kvalitet (min 5 viner) {statsCountryFilter && `(fra ${statsCountryFilter})`}</h3>
-                  <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
-                    {(() => {
-                      const regionRatings = {};
-                      filteredWines.forEach(w => {
-                        if (w.region && w.quality && (!statsCountryFilter || w.country === statsCountryFilter)) {
-                          if (!regionRatings[w.region]) regionRatings[w.region] = { total: 0, count: 0 };
-                          regionRatings[w.region].total += parseFloat(w.quality);
-                          regionRatings[w.region].count += 1;
-                        }
-                      });
-                      
-                      return Object.entries(regionRatings)
-                        .filter(([_, data]) => data.count >= 5)
-                        .map(([region, data]) => [region, data.total / data.count, data.count])
-                        .sort((a, b) => b[1] - a[1])
-                        .slice(0, 10)
-                        .map(([region, avgRating, count]) => (
-                          <div key={region} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.5rem', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem'}}>
-                            <span>{region}</span>
-                            <div style={{textAlign: 'right'}}>
-                              <div style={{fontWeight: '600'}}>{avgRating.toFixed(2)}★</div>
-                              <div style={{fontSize: '0.75rem', color: '#6b7280'}}>({count} viner)</div>
+                  {(() => {
+                    const regionRatings = {};
+                    filteredWines.forEach(w => {
+                      if (w.region && w.quality && (!statsCountryFilter || w.country === statsCountryFilter)) {
+                        if (!regionRatings[w.region]) regionRatings[w.region] = { total: 0, count: 0 };
+                        regionRatings[w.region].total += parseFloat(w.quality);
+                        regionRatings[w.region].count += 1;
+                      }
+                    });
+                    
+                    const topRegions = Object.entries(regionRatings)
+                      .filter(([_, data]) => data.count >= 5)
+                      .map(([region, data]) => [region, data.total / data.count])
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 10);
+
+                    if (topRegions.length === 0) return <div style={{color: '#6b7280'}}>Ingen data</div>;
+
+                    const chartData = Object.fromEntries(topRegions.map(([r, avg]) => [r, Math.round(avg * 10) / 10]));
+                    
+                    return (
+                      <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
+                        <div style={{flex: '0 0 40%'}}>
+                          {topRegions.map(([region, avgRating], i) => (
+                            <div key={region} style={{display: 'flex', alignItems: 'center', marginBottom: '0.75rem', fontSize: '0.875rem'}}>
+                              <div style={{width: '14px', height: '14px', background: ['#374151', '#2563eb', '#9333ea', '#dc2626', '#059669', '#f59e0b', '#0ea5e9', '#8b5cf6', '#ec4899', '#14b8a6'][i % 10], marginRight: '0.75rem', borderRadius: '2px', flexShrink: 0}}></div>
+                              <span style={{flex: 1}}>{region}</span>
+                              <span style={{fontWeight: '600', marginLeft: '0.5rem'}}>{avgRating.toFixed(2)}★</span>
                             </div>
-                          </div>
-                        ));
-                    })()}
-                  </div>
+                          ))}
+                        </div>
+                        <div style={{flex: '0 0 60%', display: 'flex', justifyContent: 'center'}}>
+                          <PieChart data={chartData} colors={['#374151', '#2563eb', '#9333ea', '#dc2626', '#059669', '#f59e0b', '#0ea5e9', '#8b5cf6', '#ec4899', '#14b8a6']} size={280} />
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </>
             );
