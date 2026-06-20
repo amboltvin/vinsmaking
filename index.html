@@ -6,10 +6,9 @@
 <title>Vinkartotek</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-body { background: linear-gradient(135deg, #faf5f0 0%, #f3f4f6 100%); min-height: 100vh; }
-.wine-card { cursor: pointer; transition: box-shadow 0.2s; }
+body { background: linear-gradient(135deg, #faf5f0 0%, #f3f4f6 100%); }
+.wine-card { cursor: pointer; }
 .wine-card:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.1) !important; }
-.modal-backdrop { background-color: rgba(0,0,0,0.5); }
 </style>
 </head>
 <body>
@@ -26,325 +25,333 @@ const SHEET_ID = '1QagDAoCbeuAneC0H37PhIVncqUxIslH8lrchBgyfhnA';
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyX1qUO2jWSAynR65Ik5c35mp7dyWJMkSSQelRtbmFOyLGsYlS2_8jCoaLNUW9WZVA/exec';
 
 const formatDate = (dateValue) => {
-if (!dateValue) return '';
-if (typeof dateValue === 'string' && dateValue.includes('-')) return dateValue;
-if (typeof dateValue === 'string' && dateValue.startsWith('Date(')) {
-const match = dateValue.match(/Date\((\d+),(\d+),(\d+)\)/);
-if (match) {
-const year = parseInt(match[1]);
-const month = String(parseInt(match[2]) + 1).padStart(2, '0');
-const day = String(parseInt(match[3])).padStart(2, '0');
-return `${year}-${month}-${day}`;
-}
-}
-return dateValue;
+  if (!dateValue) return '';
+  if (typeof dateValue === 'string' && dateValue.includes('-')) return dateValue;
+  if (typeof dateValue === 'string' && dateValue.startsWith('Date(')) {
+    const match = dateValue.match(/Date\((\d+),(\d+),(\d+)\)/);
+    if (match) {
+      const year = parseInt(match[1]);
+      const month = String(parseInt(match[2]) + 1).padStart(2, '0');
+      const day = String(parseInt(match[3])).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  }
+  return dateValue;
 };
 
 const toNorwegianDate = (dateString) => {
-if (!dateString) return '';
-const date = new Date(dateString);
-if (isNaN(date.getTime())) return dateString;
-const day = String(date.getDate()).padStart(2, '0');
-const month = String(date.getMonth() + 1).padStart(2, '0');
-const year = date.getFullYear();
-return `${day}.${month}.${year}`;
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
 };
 
 function App() {
-const [wines, setWines] = useState([]);
-const [view, setView] = useState('list');
-const [search, setSearch] = useState('');
-const [sortBy, setSortBy] = useState('newest');
-const [filterWineType, setFilterWineType] = useState('');
-const [filterQuality, setFilterQuality] = useState('');
-const [filterCountry, setFilterCountry] = useState('');
-const [filterRegion, setFilterRegion] = useState('');
-const [filterSubRegion, setFilterSubRegion] = useState('');
-const [showForm, setShowForm] = useState(false);
-const [showDetails, setShowDetails] = useState(false);
-const [selectedWine, setSelectedWine] = useState(null);
-const [editId, setEditId] = useState(null);
-const [saving, setSaving] = useState(false);
-const [loading, setLoading] = useState(false);
-const [statsCountryFilter, setStatsCountryFilter] = useState('');
-const [statsRegionFilter, setStatsRegionFilter] = useState('');
-const [form, setForm] = useState({
-name: '', url: '', wineType: '', dateTasted: new Date().toISOString().split('T')[0],
-country: '', region: '', subRegion: '', grapes: '',
-sightClarity: '', sightIntensity: '', sightColor: '',
-noseCondition: '', noseIntensity: '', noseAroma: '',
-sweetness: '', acid: '', tannin: '', body: '', taste: '', length: '', quality: ''
-});
+  const [wines, setWines] = useState([]);
+  const [view, setView] = useState('list');
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [filterWineType, setFilterWineType] = useState('');
+  const [filterQuality, setFilterQuality] = useState('');
+  const [filterCountry, setFilterCountry] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedWine, setSelectedWine] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    name: '', url: '', wineType: '', dateTasted: new Date().toISOString().split('T')[0],
+    country: '', region: '', subRegion: '', grapes: '',
+    sightClarity: '', sightIntensity: '', sightColor: '',
+    noseCondition: '', noseIntensity: '', noseAroma: '',
+    sweetness: '', acid: '', tannin: '', body: '', taste: '', length: '', quality: ''
+  });
 
-const checkPassword = () => {
-const authorized = localStorage.getItem('vinkartotek_auth');
-if (authorized === 'true') return true;
-const password = prompt('Passord påkrevd for å gjøre endringer:');
-if (password === 'Arteta') {
-localStorage.setItem('vinkartotek_auth', 'true');
-return true;
-}
-alert('Feil passord');
-return false;
-};
+  const checkPassword = () => {
+    const authorized = localStorage.getItem('vinkartotek_auth');
+    if (authorized === 'true') return true;
+    const password = prompt('Passord påkrevd for å gjøre endringer:');
+    if (password === 'Arteta') {
+      localStorage.setItem('vinkartotek_auth', 'true');
+      return true;
+    }
+    alert('Feil passord');
+    return false;
+  };
 
-useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, []);
 
-const loadData = async () => {
-setLoading(true);
-try {
-const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
-const t = await r.text();
-const j = JSON.parse(t.substring(47).slice(0, -2));
-const ws = j.table.rows.slice(0).map((row, i) => {
-let qualityValue = '';
-if (row.c[20]?.v !== null && row.c[20]?.v !== undefined) {
-qualityValue = String(row.c[20].v);
-if (qualityValue.startsWith("'")) qualityValue = qualityValue.substring(1);
-}
-return {
-id: i + 1,
-name: row.c[0]?.v || '', url: row.c[1]?.v || '', wineType: row.c[2]?.v || '',
-dateTasted: formatDate(row.c[3]?.v) || '', country: row.c[4]?.v || '', region: row.c[5]?.v || '',
-subRegion: row.c[6]?.v || '', grapes: row.c[7]?.v || '',
-sightClarity: row.c[8]?.v || '', sightIntensity: row.c[9]?.v || '', sightColor: row.c[10]?.v || '',
-noseCondition: row.c[11]?.v || '', noseIntensity: row.c[12]?.v || '', noseAroma: row.c[13]?.v || '',
-sweetness: row.c[14]?.v || '', acid: row.c[15]?.v || '', tannin: row.c[16]?.v || '',
-body: row.c[17]?.v || '', taste: row.c[18]?.v || '', length: row.c[19]?.v || '', quality: qualityValue
-};
-});
-setWines(ws);
-} catch (e) { alert('Feil: ' + e.message); }
-finally { setLoading(false); }
-};
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
+      const t = await r.text();
+      const j = JSON.parse(t.substring(47).slice(0, -2));
+      const ws = j.table.rows.map((row, i) => {
+        let qualityValue = '';
+        if (row.c[20]?.v !== null && row.c[20]?.v !== undefined) {
+          qualityValue = String(row.c[20].v);
+          if (qualityValue.startsWith("'")) qualityValue = qualityValue.substring(1);
+        }
+        return {
+          id: i + 1,
+          name: row.c[0]?.v || '', url: row.c[1]?.v || '', wineType: row.c[2]?.v || '',
+          dateTasted: formatDate(row.c[3]?.v) || '', country: row.c[4]?.v || '', region: row.c[5]?.v || '',
+          subRegion: row.c[6]?.v || '', grapes: row.c[7]?.v || '',
+          sightClarity: row.c[8]?.v || '', sightIntensity: row.c[9]?.v || '', sightColor: row.c[10]?.v || '',
+          noseCondition: row.c[11]?.v || '', noseIntensity: row.c[12]?.v || '', noseAroma: row.c[13]?.v || '',
+          sweetness: row.c[14]?.v || '', acid: row.c[15]?.v || '', tannin: row.c[16]?.v || '',
+          body: row.c[17]?.v || '', taste: row.c[18]?.v || '', length: row.c[19]?.v || '', quality: qualityValue
+        };
+      });
+      setWines(ws);
+    } catch (e) {
+      alert('Feil ved lasting: ' + e.message);
+    }
+    finally { setLoading(false); }
+  };
 
-const save = async () => {
-if (!form.name) { alert('Navn påkrevd'); return; }
-setSaving(true);
-try {
-const body = editId ? {
-action: 'update',
-originalName: wines.find(w => w.id === editId).name,
-originalDate: wines.find(w => w.id === editId).dateTasted,
-...form
-} : { action: 'add', ...form };
-const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
-const res = await r.json();
-if (res.success) {
-loadData();
-setShowForm(false);
-setEditId(null);
-} else alert('Feil: ' + res.message);
-} catch (e) { alert('Feil: ' + e.message); }
-finally { setSaving(false); }
-};
+  const save = async () => {
+    if (!form.name) { alert('Navn påkrevd'); return; }
+    setSaving(true);
+    try {
+      const body = editId ? {
+        action: 'update',
+        originalName: wines.find(w => w.id === editId).name,
+        originalDate: wines.find(w => w.id === editId).dateTasted,
+        ...form
+      } : { action: 'add', ...form };
+      const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
+      const res = await r.json();
+      if (res.success) {
+        loadData();
+        setShowForm(false);
+        setEditId(null);
+        setForm({
+          name: '', url: '', wineType: '', dateTasted: new Date().toISOString().split('T')[0],
+          country: '', region: '', subRegion: '', grapes: '',
+          sightClarity: '', sightIntensity: '', sightColor: '',
+          noseCondition: '', noseIntensity: '', noseAroma: '',
+          sweetness: '', acid: '', tannin: '', body: '', taste: '', length: '', quality: ''
+        });
+      } else {
+        alert('Feil: ' + res.message);
+      }
+    } catch (e) {
+      alert('Feil: ' + e.message);
+    }
+    finally { setSaving(false); }
+  };
 
-const del = async (id) => {
-if (!checkPassword()) return;
-if (!confirm('Slette?')) return;
-try {
-const w = wines.find(w => w.id === id);
-const r = await fetch(SCRIPT_URL, {
-method: 'POST',
-body: JSON.stringify({ action: 'delete', name: w.name, dateTasted: w.dateTasted })
-});
-const res = await r.json();
-if (res.success) { loadData(); alert('Slettet!'); }
-else alert('Feil: ' + res.message);
-} catch (e) { alert('Feil: ' + e.message); }
-};
+  const del = async (id) => {
+    if (!checkPassword()) return;
+    if (!confirm('Slette?')) return;
+    try {
+      const w = wines.find(w => w.id === id);
+      const r = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'delete', name: w.name, dateTasted: w.dateTasted })
+      });
+      const res = await r.json();
+      if (res.success) { 
+        loadData(); 
+        alert('Slettet!');
+      } else {
+        alert('Feil: ' + res.message);
+      }
+    } catch (e) {
+      alert('Feil: ' + e.message);
+    }
+  };
 
-const filtered = wines.filter(w => {
-const matchesSearch = Object.values(w).some(v => String(v).toLowerCase().includes(search.toLowerCase()));
-const matchesWineType = !filterWineType || w.wineType === filterWineType;
-const matchesQuality = !filterQuality || w.quality === filterQuality;
-const matchesCountry = !filterCountry || w.country === filterCountry;
-const matchesRegion = !filterRegion || w.region === filterRegion;
-const matchesSubRegion = !filterSubRegion || w.subRegion === filterSubRegion;
-return matchesSearch && matchesWineType && matchesQuality && matchesCountry && matchesRegion && matchesSubRegion;
-});
+  const filtered = wines.filter(w => {
+    const matchesSearch = Object.values(w).some(v => String(v).toLowerCase().includes(search.toLowerCase()));
+    const matchesWineType = !filterWineType || w.wineType === filterWineType;
+    const matchesQuality = !filterQuality || w.quality === filterQuality;
+    const matchesCountry = !filterCountry || w.country === filterCountry;
+    return matchesSearch && matchesWineType && matchesQuality && matchesCountry;
+  });
 
-const uniqueCountries = [...new Set(wines.map(w => w.country).filter(Boolean))].sort();
-const uniqueQualities = [...new Set(wines.map(w => w.quality).filter(Boolean))].sort((a, b) => parseFloat(b) - parseFloat(a));
-const uniqueRegions = filterCountry ? [...new Set(wines.filter(w => w.country === filterCountry).map(w => w.region).filter(Boolean))].sort() : [];
-const uniqueSubRegions = filterRegion ? [...new Set(wines.filter(w => w.country === filterCountry && w.region === filterRegion).map(w => w.subRegion).filter(Boolean))].sort() : [];
+  const uniqueCountries = [...new Set(wines.map(w => w.country).filter(Boolean))].sort();
+  const uniqueQualities = [...new Set(wines.map(w => w.quality).filter(Boolean))].sort((a, b) => parseFloat(b) - parseFloat(a));
 
-const sorted = [...filtered].sort((a, b) => {
-if (sortBy === 'newest') {
-const dateA = new Date(a.dateTasted || 0);
-const dateB = new Date(b.dateTasted || 0);
-if (dateB.getTime() !== dateA.getTime()) return dateB - dateA;
-return b.id - a.id;
-}
-if (sortBy === 'quality') {
-const qa = parseFloat(a.quality) || 0;
-const qb = parseFloat(b.quality) || 0;
-return qb - qa;
-}
-if (sortBy === 'country') return (a.country || '').localeCompare(b.country || '');
-if (sortBy === 'wineType') return (a.wineType || '').localeCompare(b.wineType || '');
-return 0;
-});
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === 'newest') {
+      const dateA = new Date(a.dateTasted || 0);
+      const dateB = new Date(b.dateTasted || 0);
+      return dateB - dateA;
+    }
+    if (sortBy === 'quality') {
+      return (parseFloat(b.quality) || 0) - (parseFloat(a.quality) || 0);
+    }
+    if (sortBy === 'country') return (a.country || '').localeCompare(b.country || '');
+    return 0;
+  });
 
-return (
-<div className="min-vh-100 py-5">
-<div className="container">
-<div className="card mb-4">
-<div className="card-body">
-<div className="d-flex justify-content-between align-items-center mb-4">
-<h1 className="mb-0">🗂 Vinkartotek</h1>
-<div className="d-flex gap-2">
-<button onClick={() => { if (checkPassword()) setShowForm(true); }} className="btn btn-dark btn-sm">+</button>
-<button onClick={() => { loadData(); }} disabled={loading} className="btn btn-secondary btn-sm">{loading ? '⟳' : '↻'}</button>
-</div>
-</div>
+  return (
+    <div className="py-5">
+      <div className="container">
+        <div className="card mb-4">
+          <div className="card-body">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h1 className="mb-0">🗂 Vinkartotek</h1>
+              <div className="d-flex gap-2">
+                <button onClick={() => { if (checkPassword()) setShowForm(true); }} className="btn btn-dark btn-sm">+</button>
+                <button onClick={() => { loadData(); }} disabled={loading} className="btn btn-secondary btn-sm">{loading ? '⟳' : '↻'}</button>
+              </div>
+            </div>
 
-<div className="d-flex gap-2 mb-4">
-<button onClick={() => setView('list')} className={`btn btn-sm ${view === 'list' ? 'btn-dark' : 'btn-light'}`}>Utforsk</button>
-<button onClick={() => setView('stats')} className={`btn btn-sm ${view === 'stats' ? 'btn-dark' : 'btn-light'}`}>Statistikk</button>
-</div>
+            <div className="d-flex gap-2 mb-4">
+              <button onClick={() => setView('list')} className={`btn btn-sm ${view === 'list' ? 'btn-dark' : 'btn-light'}`}>Utforsk</button>
+              <button onClick={() => setView('stats')} className={`btn btn-sm ${view === 'stats' ? 'btn-dark' : 'btn-light'}`}>Statistikk</button>
+            </div>
 
-{view === 'list' && (
-<div className="mb-4">
-<input type="text" placeholder="Søk..." value={search} onChange={(e) => setSearch(e.target.value)} className="form-control form-control-sm mb-3" />
-<div className="row g-2 mb-3">
-<div className="col-md-4">
-<select value={filterWineType} onChange={(e) => setFilterWineType(e.target.value)} className="form-select form-select-sm">
-<option value="">Alle typer</option>
-<option value="Rødvin">Rødvin</option>
-<option value="Hvitvin">Hvitvin</option>
-<option value="Rosévin">Rosévin</option>
-</select>
-</div>
-<div className="col-md-4">
-<select value={filterQuality} onChange={(e) => setFilterQuality(e.target.value)} className="form-select form-select-sm">
-<option value="">Alle stjerner</option>
-{uniqueQualities.map(q => <option key={q} value={q}>{q}★</option>)}
-</select>
-</div>
-<div className="col-md-4">
-<select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="form-select form-select-sm">
-<option value="newest">Nyeste først</option>
-<option value="quality">Kvalitet</option>
-<option value="country">Land</option>
-</select>
-</div>
-</div>
-<select value={filterCountry} onChange={(e) => {setFilterCountry(e.target.value); setFilterRegion(''); setFilterSubRegion('');}} className="form-select form-select-sm mb-3">
-<option value="">Alle land</option>
-{uniqueCountries.map(country => <option key={country} value={country}>{country}</option>)}
-</select>
-<button onClick={() => {setSearch(''); setFilterWineType(''); setFilterQuality(''); setFilterCountry(''); setFilterRegion(''); setFilterSubRegion(''); setSortBy('newest');}} className="btn btn-light btn-sm">Nullstill</button>
-</div>
-)}
-</div>
-</div>
+            {view === 'list' && (
+              <div className="mb-4">
+                <input type="text" placeholder="Søk..." value={search} onChange={(e) => setSearch(e.target.value)} className="form-control form-control-sm mb-3" />
+                <div className="row g-2 mb-3">
+                  <div className="col-md-4">
+                    <select value={filterWineType} onChange={(e) => setFilterWineType(e.target.value)} className="form-select form-select-sm">
+                      <option value="">Alle typer</option>
+                      <option value="Rødvin">Rødvin</option>
+                      <option value="Hvitvin">Hvitvin</option>
+                    </select>
+                  </div>
+                  <div className="col-md-4">
+                    <select value={filterQuality} onChange={(e) => setFilterQuality(e.target.value)} className="form-select form-select-sm">
+                      <option value="">Alle stjerner</option>
+                      {uniqueQualities.map(q => <option key={q} value={q}>{q}★</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-4">
+                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="form-select form-select-sm">
+                      <option value="newest">Nyeste først</option>
+                      <option value="quality">Kvalitet</option>
+                    </select>
+                  </div>
+                </div>
+                <select value={filterCountry} onChange={(e) => { setFilterCountry(e.target.value); }} className="form-select form-select-sm mb-3">
+                  <option value="">Alle land</option>
+                  {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <button onClick={() => { setSearch(''); setFilterWineType(''); setFilterQuality(''); setFilterCountry(''); setSortBy('newest'); }} className="btn btn-light btn-sm">Nullstill</button>
+              </div>
+            )}
 
-{view === 'list' && (
-<div>
-<div className="text-center mb-3">
-<span className="h5">{sorted.length} {sorted.length === 1 ? 'vin' : 'viner'}</span>
-</div>
-{sorted.length === 0 ? (
-<div className="card text-center text-muted p-5">
-{wines.length === 0 ? 'Ingen viner' : 'Ingen match'}
-</div>
-) : (
-sorted.map(w => (
-<div key={w.id} className="card wine-card shadow-sm mb-3 p-3 cursor-pointer" onClick={() => { setSelectedWine(w); setShowDetails(true); }}>
-<h5 className="card-title mb-2">{w.name}</h5>
-<div className="small text-muted mb-2">
-{w.wineType && <span>{w.wineType} · </span>}
-{w.country && <span>{w.country}</span>}
-{w.region && <span> · {w.region}</span>}
-{w.dateTasted && <span> · {toNorwegianDate(w.dateTasted)}</span>}
-</div>
-<div className="d-flex justify-content-between align-items-center">
-{w.quality && <span className="fw-bold">{w.quality}★</span>}
-<div className="d-flex gap-2">
-{w.url && <a href={w.url} target="_blank" className="text-decoration-none" onClick={(e) => e.stopPropagation()}>🔗</a>}
-<button onClick={(e) => { e.stopPropagation(); if (checkPassword()) { setForm(w); setEditId(w.id); setShowForm(true); } }} className="btn btn-sm btn-dark">✎</button>
-<button onClick={(e) => { e.stopPropagation(); del(w.id); }} className="btn btn-sm btn-secondary">✕</button>
-</div>
-</div>
-</div>
-))
-)}
-</div>
-)}
+            {view === 'stats' && (
+              <div>
+                <p className="h5">{wines.length} viner i samlingen</p>
+              </div>
+            )}
+          </div>
+        </div>
 
-{view === 'stats' && (
-<div className="card">
-<div className="card-body">
-<h4 className="card-title">Statistikk</h4>
-<p className="fs-3 fw-bold text-dark">{wines.length}</p>
-<p>Totalt viner</p>
-</div>
-</div>
-)}
+        {view === 'list' && (
+          <div>
+            <div className="text-center mb-3 text-muted">{sorted.length} viner</div>
+            {sorted.length === 0 ? (
+              <div className="alert alert-info">Ingen viner matcher søket</div>
+            ) : (
+              sorted.map(w => (
+                <div key={w.id} className="card wine-card mb-3 p-3" onClick={() => { setSelectedWine(w); setShowDetails(true); }}>
+                  <h5 className="mb-2">{w.name}</h5>
+                  <div className="small text-muted mb-2">
+                    {w.wineType && <span>{w.wineType} · </span>}
+                    {w.country && <span>{w.country}</span>}
+                    {w.dateTasted && <span> · {toNorwegianDate(w.dateTasted)}</span>}
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center">
+                    {w.quality && <span className="fw-bold">{w.quality}★</span>}
+                    <div className="d-flex gap-2">
+                      {w.url && <a href={w.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>🔗</a>}
+                      <button onClick={(e) => { e.stopPropagation(); if (checkPassword()) { setForm(w); setEditId(w.id); setShowForm(true); } }} className="btn btn-sm btn-dark">✎</button>
+                      <button onClick={(e) => { e.stopPropagation(); del(w.id); }} className="btn btn-sm btn-secondary">✕</button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
-{showDetails && selectedWine && (
-<div className="modal d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-<div className="modal-dialog modal-lg modal-dialog-scrollable">
-<div className="modal-content">
-<div className="modal-header">
-<h5 className="modal-title">{selectedWine.name}</h5>
-<button type="button" className="btn-close" onClick={() => { setShowDetails(false); setSelectedWine(null); }}></button>
-</div>
-<div className="modal-body">
-{selectedWine.wineType && <p><strong>Type vin:</strong> {selectedWine.wineType}</p>}
-{selectedWine.dateTasted && <p><strong>Dato:</strong> {toNorwegianDate(selectedWine.dateTasted)}</p>}
-{selectedWine.country && <p><strong>Land:</strong> {selectedWine.country}</p>}
-{selectedWine.region && <p><strong>Region:</strong> {selectedWine.region}</p>}
-{selectedWine.grapes && <p><strong>Druer:</strong> {selectedWine.grapes}</p>}
-{selectedWine.quality && <p><strong>Kvalitet:</strong> {selectedWine.quality}★</p>}
-</div>
-<div className="modal-footer">
-<button type="button" className="btn btn-primary btn-sm" onClick={() => { if (checkPassword()) { setForm(selectedWine); setEditId(selectedWine.id); setShowDetails(false); setShowForm(true); } }}>✎ Rediger</button>
-<button type="button" className="btn btn-secondary btn-sm" onClick={() => { setShowDetails(false); setSelectedWine(null); }}>Lukk</button>
-</div>
-</div>
-</div>
-</div>
-)}
+        {showDetails && selectedWine && (
+          <div className="modal d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+            <div className="modal-dialog modal-lg modal-dialog-scrollable">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">{selectedWine.name}</h5>
+                  <button type="button" className="btn-close" onClick={() => { setShowDetails(false); setSelectedWine(null); }}></button>
+                </div>
+                <div className="modal-body">
+                  {selectedWine.wineType && <p><strong>Type:</strong> {selectedWine.wineType}</p>}
+                  {selectedWine.dateTasted && <p><strong>Dato:</strong> {toNorwegianDate(selectedWine.dateTasted)}</p>}
+                  {selectedWine.country && <p><strong>Land:</strong> {selectedWine.country}</p>}
+                  {selectedWine.quality && <p><strong>Kvalitet:</strong> {selectedWine.quality}★</p>}
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-primary btn-sm" onClick={() => { if (checkPassword()) { setForm(selectedWine); setEditId(selectedWine.id); setShowDetails(false); setShowForm(true); } }}>Rediger</button>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setShowDetails(false); setSelectedWine(null); }}>Lukk</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-{showForm && (
-<div className="modal d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-<div className="modal-dialog modal-lg modal-dialog-scrollable">
-<div className="modal-content">
-<div className="modal-header">
-<h5 className="modal-title">{editId ? 'Rediger' : 'Ny vin'}</h5>
-<button type="button" className="btn-close" onClick={() => { setShowForm(false); setEditId(null); }}></button>
-</div>
-<div className="modal-body">
-<input type="text" placeholder="Vinnavn *" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} className="form-control form-control-sm mb-2" />
-<input type="url" placeholder="URL" value={form.url} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} className="form-control form-control-sm mb-2" />
-<select value={form.wineType} onChange={(e) => setForm(p => ({ ...p, wineType: e.target.value }))} className="form-select form-select-sm mb-2">
-<option value="">Type vin</option>
-<option value="Rødvin">Rødvin</option>
-<option value="Hvitvin">Hvitvin</option>
-</select>
-<input type="date" value={form.dateTasted} onChange={(e) => setForm(p => ({ ...p, dateTasted: e.target.value }))} className="form-control form-control-sm mb-2" />
-<input type="text" placeholder="Land" value={form.country} onChange={(e) => setForm(p => ({ ...p, country: e.target.value }))} className="form-control form-control-sm mb-2" />
-<input type="text" placeholder="Druer" value={form.grapes} onChange={(e) => setForm(p => ({ ...p, grapes: e.target.value }))} className="form-control form-control-sm mb-2" />
-<label className="form-label small">Kvalitet</label>
-<div className="mb-2">
-{[1,2,3,4,5].map(s => {
-const cr = parseFloat(form.quality) || 0;
-return <span key={s} onClick={() => setForm(p => ({ ...p, quality: (cr === s ? s - 0.5 : s).toString() }))} style={{fontSize: '1.5rem', cursor: 'pointer'}}>{cr >= s ? '★' : cr === s - 0.5 ? '½' : '☆'}</span>;
-})}
-</div>
-</div>
-<div className="modal-footer">
-<button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={saving}>{saving ? 'Lagrer...' : (editId ? 'Oppdater' : 'Legg til')}</button>
-{editId && <button type="button" className="btn btn-danger btn-sm" onClick={() => { setShowForm(false); setEditId(null); del(editId); }}>Slett</button>}
-<button type="button" className="btn btn-secondary btn-sm" onClick={() => { setShowForm(false); setEditId(null); }}>Avbryt</button>
-</div>
-</div>
-</div>
-)}
-</div>
-);
+        {showForm && (
+          <div className="modal d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+            <div className="modal-dialog modal-lg modal-dialog-scrollable">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">{editId ? 'Rediger vin' : 'Ny vin'}</h5>
+                  <button type="button" className="btn-close" onClick={() => { setShowForm(false); setEditId(null); }}></button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-2">
+                    <input type="text" placeholder="Vinnavn *" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} className="form-control form-control-sm" />
+                  </div>
+                  <div className="mb-2">
+                    <input type="url" placeholder="URL" value={form.url} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} className="form-control form-control-sm" />
+                  </div>
+                  <div className="mb-2">
+                    <select value={form.wineType} onChange={(e) => setForm(p => ({ ...p, wineType: e.target.value }))} className="form-select form-select-sm">
+                      <option value="">Type vin</option>
+                      <option value="Rødvin">Rødvin</option>
+                      <option value="Hvitvin">Hvitvin</option>
+                      <option value="Rosévin">Rosévin</option>
+                    </select>
+                  </div>
+                  <div className="mb-2">
+                    <input type="date" value={form.dateTasted} onChange={(e) => setForm(p => ({ ...p, dateTasted: e.target.value }))} className="form-control form-control-sm" />
+                  </div>
+                  <div className="mb-2">
+                    <input type="text" placeholder="Land" value={form.country} onChange={(e) => setForm(p => ({ ...p, country: e.target.value }))} className="form-control form-control-sm" />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label small">Kvalitet</label>
+                    <div>
+                      {[1,2,3,4,5].map(s => {
+                        const cr = parseFloat(form.quality) || 0;
+                        return <span key={s} onClick={() => setForm(p => ({ ...p, quality: (cr === s ? s - 0.5 : s).toString() }))} style={{fontSize: '1.5rem', cursor: 'pointer', marginRight: '0.25rem'}}>{cr >= s ? '★' : cr === s - 0.5 ? '½' : '☆'}</span>;
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-primary btn-sm" onClick={save} disabled={saving}>{saving ? 'Lagrer...' : (editId ? 'Oppdater' : 'Legg til')}</button>
+                  {editId && <button type="button" className="btn btn-danger btn-sm" onClick={() => { setShowForm(false); setEditId(null); del(editId); }}>Slett</button>}
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setShowForm(false); setEditId(null); }}>Avbryt</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 ReactDOM.render(<App />, document.getElementById('root'));
