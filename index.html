@@ -46,6 +46,20 @@ const year = date.getFullYear();
 return `${day}.${month}.${year}`;
 };
 
+// Helper function to get wine type emoji
+const getWineTypeEmoji = (wineType) => {
+const emojiMap = {
+'Rødvin': '🍷',
+'Hvitvin': '🥂',
+'Rosévin': '🍷',
+'Orangevin': '🍷',
+'Musserende vin': '🥂',
+'Musserende rosévin': '🥂',
+'Dessertvin': '🍷'
+};
+return emojiMap[wineType] || '🍷';
+};
+
 function App() {
 const [wines, setWines] = useState([]);
 const [view, setView] = useState('list');
@@ -132,7 +146,8 @@ id: i + 1,
 name: row.c[0]?.v || '', url: row.c[1]?.v || '', wineType: row.c[2]?.v || '',
 dateTasted: formatDate(row.c[3]?.v) || '', country: row.c[4]?.v || '', region: row.c[5]?.v || '',
 subRegion: row.c[6]?.v || '', grapes: row.c[7]?.v || '',
-sightClarity: row.c[8]?.v || '', sightIntensity: row.c[9]?.v || '', sightColor: row.c[10]?.v || '',
+              sightClarity: row.c[8]?.v || '', sightIntensity: row.c[9]?.v || '', noseColor: row.c[10]?.v || '',
+              sightClarity: row.c[8]?.v || '', sightIntensity: row.c[9]?.v || '', sightColor: row.c[10]?.v || '',
 noseCondition: row.c[11]?.v || '', noseIntensity: row.c[12]?.v || '', noseAroma: row.c[13]?.v || '',
 sweetness: row.c[14]?.v || '', acid: row.c[15]?.v || '', tannin: row.c[16]?.v || '',
 body: row.c[17]?.v || '', taste: row.c[18]?.v || '', length: row.c[19]?.v || '', quality: qualityValue
@@ -156,8 +171,12 @@ originalDate: wines.find(w => w.id === editId).dateTasted,
 ...form
 } : { action: 'add', ...form };
 
+console.log('Sending to server:', body);
+
 const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
 const res = await r.json();
+
+console.log('Server response:', res);
 
 if (res.success) {
 if (editId) setWines(wines.map(w => w.id === editId ? { ...form, id: editId } : w));
@@ -181,11 +200,13 @@ if (!checkPassword()) return;
 if (!confirm('Slette?')) return;
 try {
 const w = wines.find(w => w.id === id);
+console.log('Deleting wine:', w);
 const r = await fetch(SCRIPT_URL, {
 method: 'POST',
 body: JSON.stringify({ action: 'delete', name: w.name, dateTasted: w.dateTasted })
 });
 const res = await r.json();
+console.log('Delete response:', res);
 if (res.success) { setWines(wines.filter(x => x.id !== id)); alert('Slettet!'); }
 else alert('Feil: ' + res.message);
 } catch (e) { alert('Feil: ' + e.message); }
@@ -202,23 +223,29 @@ return matchesSearch && matchesWineType && matchesQuality && matchesCountry && m
 });
 
 const uniqueCountries = [...new Set(wines.map(w => w.country).filter(Boolean))].sort();
+
+// Get unique quality ratings sorted by rating
 const uniqueQualities = [...new Set(wines.map(w => w.quality).filter(Boolean))].sort((a, b) => parseFloat(b) - parseFloat(a));
 
+// Get regions for selected country
 const uniqueRegions = filterCountry 
 ? [...new Set(wines.filter(w => w.country === filterCountry).map(w => w.region).filter(Boolean))].sort()
 : [];
 
+// Get subregions for selected region
 const uniqueSubRegions = filterRegion 
 ? [...new Set(wines.filter(w => w.country === filterCountry && w.region === filterRegion).map(w => w.subRegion).filter(Boolean))].sort()
 : [];
 
 const sorted = [...filtered].sort((a, b) => {
 if (sortBy === 'newest') {
+// Sort by actual date field (newest first), then by ID for same-date wines
 const dateA = new Date(a.dateTasted || 0);
 const dateB = new Date(b.dateTasted || 0);
 if (dateB.getTime() !== dateA.getTime()) {
 return dateB - dateA;
 }
+// If dates are the same, sort by ID (higher ID = added later)
 return b.id - a.id;
 }
 if (sortBy === 'quality') {
@@ -238,7 +265,9 @@ return (
 <div className="flex items-center justify-between mb-6">
 <h1 className="text-3xl font-bold">🗂 Vinkartotek</h1>
 <div className="flex gap-2">
-<button onClick={() => { if (checkPassword()) setShowForm(true); }} className="bg-slate-700 text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 text-sm">+</button>
+<button onClick={() => { if (checkPassword()) setShowForm(true); }} className="bg-slate-700 text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 text-sm">
++
+</button>
 <button 
 onClick={() => { loadData(); }} 
 disabled={loading}
@@ -350,6 +379,7 @@ Nullstill
 </div>
 </div>
 )}
+</div>
 
 {view === 'list' && (
 <div className="space-y-4">
@@ -404,6 +434,7 @@ return stars;
 
 {view === 'stats' && (
 <div className="space-y-6">
+{/* Filter wines for statistics based on country and region */}
 {(() => {
 const statsWines = wines.filter(w => {
 if (statsCountryFilter && w.country !== statsCountryFilter) return false;
@@ -419,7 +450,9 @@ return (
 <p>Totalt viner</p>
 </div>
 
+{/* Country/Region/Subregion statistics */}
 {(() => {
+// Get available countries sorted by count
 const countryCounts = {};
 wines.forEach(w => {
 if (w.country) countryCounts[w.country] = (countryCounts[w.country] || 0) + 1;
@@ -428,6 +461,7 @@ const countries = Object.entries(countryCounts)
 .sort((a, b) => b[1] - a[1])
 .map(([country]) => country);
 
+// Get available regions for selected country, sorted by count
 let regions = [];
 if (statsCountryFilter) {
 const regionCounts = {};
@@ -439,22 +473,26 @@ regions = Object.entries(regionCounts)
 .map(([region]) => region);
 }
 
+// Determine what to show in the pie chart
 let chartTitle = 'Land';
 let chartData = {};
 
 if (!statsCountryFilter) {
+// Show countries
 statsWines.forEach(w => {
 if (w.country) {
 chartData[w.country] = (chartData[w.country] || 0) + 1;
 }
 });
 } else if (!statsRegionFilter) {
+// Show regions for selected country
 chartTitle = `Regioner i ${statsCountryFilter}`;
 statsWines.forEach(w => {
 const key = w.region || 'Ingen region';
 chartData[key] = (chartData[key] || 0) + 1;
 });
 } else {
+// Show subregions for selected region
 chartTitle = `Underregioner i ${statsRegionFilter}`;
 statsWines.forEach(w => {
 const key = w.subRegion || 'Ingen underregion';
@@ -566,6 +604,443 @@ return segments;
 </div>
 );
 })()}
+
+{/* Type vin statistics */}
+{(() => {
+const wineTypeCounts = {};
+statsWines.forEach(w => {
+if (w.wineType) {
+wineTypeCounts[w.wineType] = (wineTypeCounts[w.wineType] || 0) + 1;
+}
+});
+const wineTypeData = Object.entries(wineTypeCounts).sort((a, b) => b[1] - a[1]);
+const total = wineTypeData.reduce((sum, [, count]) => sum + count, 0);
+
+return wineTypeData.length > 0 && (
+<div className="bg-white rounded-lg shadow-lg p-6">
+<div className="flex items-center justify-between mb-4">
+<h3 className="text-xl font-bold">Type vin</h3>
+<button
+onClick={() => {
+const csv = 'Type vin,Antall,Prosent\n' + wineTypeData.map(([type, count]) => 
+`"${type}",${count},${Math.round(count/total*100)}%`
+).join('\n');
+const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = 'Type_vin.csv';
+link.click();
+}}
+className="px-3 py-1 bg-slate-600 text-white rounded text-sm hover:bg-slate-700"
+>
+Eksporter
+</button>
+</div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+<div>
+<ul className="space-y-2">
+{wineTypeData.map(([type, count], idx) => {
+const colors = ['#dc2626', '#ea580c', '#d97706', '#ca8a04', '#65a30d', '#16a34a', '#059669', '#0d9488', '#0891b2', '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#c026d3', '#db2777', '#e11d48', '#b91c1c', '#c2410c', '#b45309'];
+return (
+<li key={type} className="flex justify-between items-center gap-2">
+<div className="flex items-center gap-2 flex-1">
+<span className="w-3 h-3 rounded-sm flex-shrink-0" style={{backgroundColor: colors[idx % colors.length]}}></span>
+<span>{type}</span>
+</div>
+<span className="font-semibold whitespace-nowrap">{count} ({Math.round(count/total*100)}%)</span>
+</li>
+);
+})}
+</ul>
+</div>
+<div className="flex items-start justify-center">
+<svg viewBox="0 0 200 200" className="w-96 h-96">
+{(() => {
+let currentAngle = 0;
+const colors = ['#dc2626', '#ea580c', '#d97706', '#ca8a04', '#65a30d', '#16a34a', '#059669', '#0d9488', '#0891b2', '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#c026d3', '#db2777', '#e11d48', '#b91c1c', '#c2410c', '#b45309'];
+const segments = [];
+wineTypeData.forEach(([type, count], idx) => {
+const percentage = count / total;
+const angle = percentage * 360;
+const endAngle = currentAngle + angle;
+const x1 = 100 + 80 * Math.cos((currentAngle - 90) * Math.PI / 180);
+const y1 = 100 + 80 * Math.sin((currentAngle - 90) * Math.PI / 180);
+const x2 = 100 + 80 * Math.cos((endAngle - 90) * Math.PI / 180);
+const y2 = 100 + 80 * Math.sin((endAngle - 90) * Math.PI / 180);
+const largeArc = angle > 180 ? 1 : 0;
+const path = `M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+// Calculate label position
+const midAngle = (currentAngle + endAngle) / 2;
+const labelX = 100 + 50 * Math.cos((midAngle - 90) * Math.PI / 180);
+const labelY = 100 + 50 * Math.sin((midAngle - 90) * Math.PI / 180);
+
+segments.push(
+<g key={type}>
+<path d={path} fill={colors[idx % colors.length]} />
+{percentage > 0.05 && <text x={labelX} y={labelY} fontSize="9" fill="white" textAnchor="middle" fontWeight="bold">{type}</text>}
+</g>
+);
+currentAngle = endAngle;
+});
+return segments;
+})()}
+</svg>
+</div>
+</div>
+</div>
+);
+})()}
+
+{/* Druer statistics */}
+{(() => {
+const grapeCounts = {};
+statsWines.forEach(w => {
+if (w.grapes) {
+// Parse grapes field: "Tempranillo 100%", "Cabernet Sauvignon 60%, Merlot 40%", etc.
+const grapeEntries = w.grapes.split(',').map(g => g.trim());
+grapeEntries.forEach(entry => {
+const match = entry.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*%\s*$/);
+if (match) {
+const grapeName = match[1].trim();
+const percentage = parseFloat(match[2]);
+grapeCounts[grapeName] = (grapeCounts[grapeName] || 0) + percentage;
+}
+});
+}
+});
+const grapeData = Object.entries(grapeCounts).sort((a, b) => b[1] - a[1]);
+const total = grapeData.reduce((sum, [, count]) => sum + count, 0);
+
+return grapeData.length > 0 && (
+<div className="bg-white rounded-lg shadow-lg p-6">
+<div className="flex items-center justify-between mb-4">
+<h3 className="text-xl font-bold">Druer ({grapeData.length})</h3>
+<button
+onClick={() => {
+const csv = 'Drue,Prosent\n' + grapeData.map(([grape, count]) => {
+const percentage = count/total*100;
+let displayPercentage;
+if (percentage >= 1) {
+displayPercentage = Math.round(percentage) + '%';
+} else if (percentage >= 0.1) {
+displayPercentage = percentage.toFixed(1) + '%';
+} else if (percentage >= 0.01) {
+displayPercentage = percentage.toFixed(2) + '%';
+} else {
+displayPercentage = percentage.toFixed(3) + '%';
+}
+return `"${grape}",${displayPercentage}`;
+}).join('\n');
+const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = 'Druer.csv';
+link.click();
+}}
+className="px-3 py-1 bg-slate-600 text-white rounded text-sm hover:bg-slate-700"
+>
+Eksporter
+</button>
+</div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+<div>
+<ul className="space-y-2 max-h-96 overflow-y-auto">
+{grapeData.map(([grape, count], idx) => {
+const percentage = count/total*100;
+let displayPercentage;
+if (percentage >= 1) {
+displayPercentage = Math.round(percentage) + '%';
+} else if (percentage >= 0.1) {
+displayPercentage = percentage.toFixed(1) + '%';
+} else if (percentage >= 0.01) {
+displayPercentage = percentage.toFixed(2) + '%';
+} else {
+displayPercentage = percentage.toFixed(3) + '%';
+}
+const colors = ['#dc2626', '#ea580c', '#d97706', '#ca8a04', '#65a30d', '#16a34a', '#059669', '#0d9488', '#0891b2', '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#c026d3', '#db2777', '#e11d48', '#b91c1c', '#c2410c', '#b45309'];
+return (
+<li key={grape} className="flex justify-between items-center gap-2">
+<div className="flex items-center gap-2 flex-1">
+{idx < 20 && <span className="w-3 h-3 rounded-sm flex-shrink-0" style={{backgroundColor: colors[idx % colors.length]}}></span>}
+<span>{grape}</span>
+</div>
+<span className="font-semibold whitespace-nowrap">{displayPercentage}</span>
+</li>
+);
+})}
+</ul>
+</div>
+<div className="flex items-start justify-center">
+<svg viewBox="0 0 200 200" className="w-96 h-96">
+{(() => {
+let currentAngle = 0;
+const colors = ['#dc2626', '#ea580c', '#d97706', '#ca8a04', '#65a30d', '#16a34a', '#059669', '#0d9488', '#0891b2', '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#c026d3', '#db2777', '#e11d48', '#b91c1c', '#c2410c', '#b45309'];
+const segments = [];
+const top20 = grapeData.slice(0, 20);
+const top20Total = top20.reduce((sum, [, count]) => sum + count, 0);
+
+top20.forEach(([grape, count], idx) => {
+const percentage = count / top20Total;
+const angle = percentage * 360;
+const endAngle = currentAngle + angle;
+const x1 = 100 + 80 * Math.cos((currentAngle - 90) * Math.PI / 180);
+const y1 = 100 + 80 * Math.sin((currentAngle - 90) * Math.PI / 180);
+const x2 = 100 + 80 * Math.cos((endAngle - 90) * Math.PI / 180);
+const y2 = 100 + 80 * Math.sin((endAngle - 90) * Math.PI / 180);
+const largeArc = angle > 180 ? 1 : 0;
+const path = `M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+// Calculate label position
+const midAngle = (currentAngle + endAngle) / 2;
+const labelX = 100 + 50 * Math.cos((midAngle - 90) * Math.PI / 180);
+const labelY = 100 + 50 * Math.sin((midAngle - 90) * Math.PI / 180);
+
+segments.push(
+<g key={grape}>
+<path d={path} fill={colors[idx % colors.length]} />
+{percentage > 0.08 && <text x={labelX} y={labelY} fontSize="8" fill="white" textAnchor="middle" fontWeight="bold">{grape}</text>}
+</g>
+);
+currentAngle = endAngle;
+});
+return segments;
+})()}
+</svg>
+</div>
+</div>
+{grapeData.length > 20 && <p className="text-sm text-gray-500 mt-2">Diagram viser topp 20 druer</p>}
+</div>
+);
+})()}
+
+{/* Quality statistics */}
+{(() => {
+const qualityCounts = {};
+statsWines.forEach(w => {
+if (w.quality) {
+const rating = parseFloat(w.quality);
+if (!isNaN(rating)) {
+const ratingStr = rating.toString();
+qualityCounts[ratingStr] = (qualityCounts[ratingStr] || 0) + 1;
+}
+}
+});
+const qualityData = Object.entries(qualityCounts).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0]));
+const total = qualityData.reduce((sum, [, count]) => sum + count, 0);
+
+return qualityData.length > 0 && (
+<div className="bg-white rounded-lg shadow-lg p-6">
+<div className="flex items-center justify-between mb-4">
+<h3 className="text-xl font-bold">Kvalitet</h3>
+<button
+onClick={() => {
+const csv = 'Kvalitet,Antall,Prosent\n' + qualityData.map(([rating, count]) => 
+`${rating},${count},${Math.round(count/total*100)}%`
+).join('\n');
+const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = 'Kvalitet.csv';
+link.click();
+}}
+className="px-3 py-1 bg-slate-600 text-white rounded text-sm hover:bg-slate-700"
+>
+Eksporter
+</button>
+</div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+<div>
+<ul className="space-y-2">
+{qualityData.map(([rating, count], idx) => {
+const colors = ['#dc2626', '#ea580c', '#d97706', '#ca8a04', '#65a30d', '#16a34a', '#059669', '#0d9488', '#0891b2', '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#c026d3', '#db2777', '#e11d48', '#b91c1c', '#c2410c', '#b45309'];
+return (
+<li key={rating} className="flex justify-between items-center gap-2">
+<div className="flex items-center gap-2 flex-1">
+<span className="w-3 h-3 rounded-sm flex-shrink-0" style={{backgroundColor: colors[idx % colors.length]}}></span>
+<span>{rating}★</span>
+</div>
+<span className="font-semibold whitespace-nowrap">{count} ({Math.round(count/total*100)}%)</span>
+</li>
+);
+})}
+</ul>
+</div>
+<div className="flex items-start justify-center">
+<svg viewBox="0 0 200 200" className="w-96 h-96">
+{(() => {
+let currentAngle = 0;
+const colors = ['#dc2626', '#ea580c', '#d97706', '#ca8a04', '#65a30d', '#16a34a', '#059669', '#0d9488', '#0891b2', '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#c026d3', '#db2777', '#e11d48', '#b91c1c', '#c2410c', '#b45309'];
+const segments = [];
+qualityData.forEach(([rating, count], idx) => {
+const percentage = count / total;
+const angle = percentage * 360;
+const endAngle = currentAngle + angle;
+const x1 = 100 + 80 * Math.cos((currentAngle - 90) * Math.PI / 180);
+const y1 = 100 + 80 * Math.sin((currentAngle - 90) * Math.PI / 180);
+const x2 = 100 + 80 * Math.cos((endAngle - 90) * Math.PI / 180);
+const y2 = 100 + 80 * Math.sin((endAngle - 90) * Math.PI / 180);
+const largeArc = angle > 180 ? 1 : 0;
+const path = `M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+// Calculate label position
+const midAngle = (currentAngle + endAngle) / 2;
+const labelX = 100 + 50 * Math.cos((midAngle - 90) * Math.PI / 180);
+const labelY = 100 + 50 * Math.sin((midAngle - 90) * Math.PI / 180);
+
+segments.push(
+<g key={rating}>
+<path d={path} fill={colors[idx % colors.length]} />
+{percentage > 0.05 && <text x={labelX} y={labelY} fontSize="10" fill="white" textAnchor="middle" fontWeight="bold">{rating}★</text>}
+</g>
+);
+currentAngle = endAngle;
+});
+return segments;
+})()}
+</svg>
+</div>
+</div>
+</div>
+);
+})()}
+
+{/* Top countries and regions by average score */}
+{(() => {
+// Calculate average score per country (minimum 10 wines)
+const countryStats = {};
+
+statsWines.forEach(w => {
+if (w.country && w.quality) {
+const rating = parseFloat(w.quality);
+if (!isNaN(rating)) {
+if (!countryStats[w.country]) {
+countryStats[w.country] = { sum: 0, count: 0 };
+}
+countryStats[w.country].sum += rating;
+countryStats[w.country].count += 1;
+}
+}
+});
+
+// Filter countries with at least 10 wines and calculate averages
+const topCountries = Object.entries(countryStats)
+.filter(([country, stats]) => stats.count >= 10)
+.map(([country, stats]) => ({
+country,
+count: stats.count,
+average: stats.sum / stats.count
+}))
+.sort((a, b) => b.average - a.average)
+.slice(0, 10);
+
+// Calculate average score per region (minimum 10 wines)
+const regionStats = {};
+
+statsWines.forEach(w => {
+if (w.region && w.quality) {
+const rating = parseFloat(w.quality);
+if (!isNaN(rating)) {
+if (!regionStats[w.region]) {
+regionStats[w.region] = { sum: 0, count: 0 };
+}
+regionStats[w.region].sum += rating;
+regionStats[w.region].count += 1;
+}
+}
+});
+
+// Filter regions with at least 10 wines and calculate averages
+const topRegions = Object.entries(regionStats)
+.filter(([region, stats]) => stats.count >= 10)
+.map(([region, stats]) => ({
+region,
+count: stats.count,
+average: stats.sum / stats.count
+}))
+.sort((a, b) => b.average - a.average)
+.slice(0, 20);
+
+return (topCountries.length > 0 || topRegions.length > 0) && (
+<div className="bg-white rounded-lg shadow-lg p-6">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+{/* Top countries */}
+{topCountries.length > 0 && (
+<div>
+<div className="flex items-center justify-between mb-4">
+<h3 className="text-xl font-bold">Topp 10 land (gjennomsnitt)</h3>
+<button
+onClick={() => {
+const csv = 'Land,Antall viner,Gjennomsnittskår\n' + topCountries.map(c => 
+`"${c.country}",${c.count},${c.average.toFixed(2)}`
+).join('\n');
+const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = 'Topp_Land.csv';
+link.click();
+}}
+className="px-3 py-1 bg-slate-600 text-white rounded text-sm hover:bg-slate-700"
+>
+Eksporter
+</button>
+</div>
+<ul className="space-y-2">
+{topCountries.map((c, idx) => (
+<li key={c.country} className="flex justify-between items-center gap-2">
+<div className="flex items-center gap-2 flex-1">
+<span className="text-gray-500 font-semibold">{idx + 1}.</span>
+<span>{c.country}</span>
+<span style={{fontSize: '0.75rem', color: '#9ca3af'}}>({c.count} viner)</span>
+</div>
+<span className="font-bold text-slate-700 whitespace-nowrap">{c.average.toFixed(2)}★</span>
+</li>
+))}
+</ul>
+<p className="text-sm text-gray-500 mt-2">Kun land med minimum 10 registrerte viner</p>
+</div>
+)}
+
+{/* Top regions */}
+{topRegions.length > 0 && (
+<div>
+<div className="flex items-center justify-between mb-4">
+<h3 className="text-xl font-bold">Topp 20 regioner (gjennomsnitt)</h3>
+<button
+onClick={() => {
+const csv = 'Region,Antall viner,Gjennomsnittskår\n' + topRegions.map(r => 
+`"${r.region}",${r.count},${r.average.toFixed(2)}`
+).join('\n');
+const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = 'Topp_Regioner.csv';
+link.click();
+}}
+className="px-3 py-1 bg-slate-600 text-white rounded text-sm hover:bg-slate-700"
+>
+Eksporter
+</button>
+</div>
+<ul className="space-y-2">
+{topRegions.map((r, idx) => (
+<li key={r.region} className="flex justify-between items-center gap-2">
+<div className="flex items-center gap-2 flex-1">
+<span className="text-gray-500 font-semibold">{idx + 1}.</span>
+<span>{r.region}</span>
+<span style={{fontSize: '0.75rem', color: '#9ca3af'}}>({r.count} viner)</span>
+</div>
+<span className="font-bold text-slate-700 whitespace-nowrap">{r.average.toFixed(2)}★</span>
+</li>
+))}
+</ul>
+<p className="text-sm text-gray-500 mt-2">Kun regioner med minimum 10 registrerte viner</p>
+</div>
+)}
+</div>
+</div>
+);
+})()}
 </>
 );
 })()}
@@ -585,6 +1060,7 @@ return segments;
 <button onClick={() => { setShowDetails(false); setSelectedWine(null); }} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
 </div>
 <div className="px-6 py-4 space-y-3">
+
 <div className="grid grid-cols-4 gap-x-4 gap-y-2 text-sm">
 {selectedWine.wineType && (
 <>
@@ -623,6 +1099,7 @@ return segments;
 </>
 )}
 </div>
+
 {(selectedWine.sightClarity || selectedWine.sightIntensity || selectedWine.sightColor) && (
 <div className="pt-2">
 <h3 className="text-sm font-semibold text-gray-700 mb-2">Utseende</h3>
@@ -648,6 +1125,7 @@ return segments;
 </div>
 </div>
 )}
+
 {(selectedWine.noseCondition || selectedWine.noseIntensity || selectedWine.noseAroma) && (
 <div className="pt-2">
 <h3 className="text-sm font-semibold text-gray-700 mb-2">Duft</h3>
@@ -673,6 +1151,7 @@ return segments;
 </div>
 </div>
 )}
+
 {(selectedWine.sweetness || selectedWine.acid || selectedWine.tannin || selectedWine.body || selectedWine.taste || selectedWine.length) && (
 <div className="pt-2">
 <h3 className="text-sm font-semibold text-gray-700 mb-2">Smak</h3>
@@ -716,6 +1195,7 @@ return segments;
 </div>
 </div>
 )}
+
 {selectedWine.quality && (
 <div className="pt-2">
 <div className="text-sm font-semibold text-gray-700 mb-2">Kvalitet</div>
@@ -791,6 +1271,7 @@ list="countries-list"
 <option key={c} value={c} />
 ))}
 </datalist>
+
 <input 
 placeholder="Region" 
 value={form.region} 
@@ -804,6 +1285,7 @@ list="regions-list"
 <option key={r} value={r} />
 ))}
 </datalist>
+
 <input 
 placeholder="Underregion" 
 value={form.subRegion} 
@@ -818,6 +1300,7 @@ list="subregions-list"
 ))}
 </datalist>
 </div>
+
 <input 
 placeholder="Druer" 
 value={form.grapes} 
