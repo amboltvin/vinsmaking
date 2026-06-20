@@ -576,7 +576,7 @@ function App() {
                     if (topCountries.length === 0) return <div style={{color: '#6b7280'}}>Ingen data</div>;
                     
                     return (
-                      <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
+                      <div className="stats-list" style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
                         {topCountries.map(([country, avgRating], i) => (
                           <div key={country} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem'}}>
                             <span>{country}</span>
@@ -609,7 +609,7 @@ function App() {
                     if (topRegions.length === 0) return <div style={{color: '#6b7280'}}>Ingen data</div>;
                     
                     return (
-                      <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
+                      <div className="stats-list" style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
                         {topRegions.map(([region, avgRating], i) => (
                           <div key={region} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem'}}>
                             <span>{region}</span>
