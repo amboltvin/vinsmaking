@@ -380,12 +380,24 @@ function App() {
 
             const wineTypeStats = {};
             const qualityStats = {};
+            const grapeStats = {};
+            const regionStats = {};
+            const countryStats = {};
+
             filteredWines.forEach(w => {
               if (w.wineType) wineTypeStats[w.wineType] = (wineTypeStats[w.wineType] || 0) + 1;
               if (w.quality) qualityStats[w.quality] = (qualityStats[w.quality] || 0) + 1;
+              if (w.grapes) {
+                w.grapes.split(',').forEach(g => {
+                  const grape = g.trim().replace(/\d+(\.\d+)?%/g, '').trim();
+                  if (grape) grapeStats[grape] = (grapeStats[grape] || 0) + 1;
+                });
+              }
+              if (w.region) regionStats[w.region] = (regionStats[w.region] || 0) + 1;
+              if (w.country) countryStats[w.country] = (countryStats[w.country] || 0) + 1;
             });
 
-            const PieChart = ({ data, colors }) => {
+            const PieChart = ({ data, colors, size = 280 }) => {
               const total = Object.values(data).reduce((a, b) => a + b, 0);
               if (total === 0) return <div style={{color: '#6b7280'}}>Ingen data</div>;
               
@@ -396,43 +408,30 @@ function App() {
                 const endAngle = currentAngle + sliceAngle;
                 currentAngle = endAngle;
                 
+                const radius = size / 2.2;
+                const centerX = size / 2;
+                const centerY = size / 2;
+                
                 const start = {
-                  x: 50 + 40 * Math.cos((startAngle - 90) * Math.PI / 180),
-                  y: 50 + 40 * Math.sin((startAngle - 90) * Math.PI / 180)
+                  x: centerX + radius * Math.cos((startAngle - 90) * Math.PI / 180),
+                  y: centerY + radius * Math.sin((startAngle - 90) * Math.PI / 180)
                 };
                 const end = {
-                  x: 50 + 40 * Math.cos((endAngle - 90) * Math.PI / 180),
-                  y: 50 + 40 * Math.sin((endAngle - 90) * Math.PI / 180)
+                  x: centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180),
+                  y: centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180)
                 };
                 const largeArc = sliceAngle > 180 ? 1 : 0;
-                const path = `M 50 50 L ${start.x} ${start.y} A 40 40 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
+                const path = `M ${centerX} ${centerY} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
                 
-                const labelAngle = startAngle + sliceAngle / 2;
-                const labelX = 50 + 25 * Math.cos((labelAngle - 90) * Math.PI / 180);
-                const labelY = 50 + 25 * Math.sin((labelAngle - 90) * Math.PI / 180);
-                
-                return { label, value, path, labelX, labelY, color: colors[idx % colors.length], percentage: ((value / total) * 100).toFixed(0) };
+                return { label, value, path, color: colors[idx % colors.length], percentage: ((value / total) * 100).toFixed(0) };
               });
               
               return (
-                <div>
-                  <svg width="200" height="200" viewBox="0 0 100 100" style={{display: 'inline-block'}}>
-                    {slices.map((slice, i) => (
-                      <g key={i}>
-                        <path d={slice.path} fill={slice.color} stroke="white" strokeWidth="2" />
-                      </g>
-                    ))}
-                  </svg>
-                  <div style={{marginTop: '1rem'}}>
-                    {slices.map((slice, i) => (
-                      <div key={i} style={{display: 'flex', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.875rem'}}>
-                        <div style={{width: '12px', height: '12px', background: slice.color, marginRight: '0.5rem', borderRadius: '2px'}}></div>
-                        <span style={{flex: 1}}>{slice.label}</span>
-                        <span style={{fontWeight: '600'}}>{slice.value} ({slice.percentage}%)</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{display: 'block'}}>
+                  {slices.map((slice, i) => (
+                    <path key={i} d={slice.path} fill={slice.color} stroke="white" strokeWidth="2" />
+                  ))}
+                </svg>
               );
             };
 
@@ -440,12 +439,80 @@ function App() {
               <>
                 <div className="stats-box" style={{marginBottom: '1.5rem'}}>
                   <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Fordeling etter type vin</h3>
-                  <PieChart data={wineTypeStats} colors={['#374151', '#2563eb', '#9333ea', '#dc2626', '#059669', '#f59e0b']} />
+                  <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
+                    <div style={{flex: '0 0 40%'}}>
+                      {Object.entries(wineTypeStats).sort((a, b) => b[1] - a[1]).map((entry, i) => (
+                        <div key={entry[0]} style={{display: 'flex', alignItems: 'center', marginBottom: '0.75rem', fontSize: '0.875rem'}}>
+                          <div style={{width: '14px', height: '14px', background: ['#374151', '#2563eb', '#9333ea', '#dc2626', '#059669', '#f59e0b'][i % 6], marginRight: '0.75rem', borderRadius: '2px', flexShrink: 0}}></div>
+                          <span style={{flex: 1}}>{entry[0]}</span>
+                          <span style={{fontWeight: '600', marginLeft: '0.5rem'}}>{entry[1]}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{flex: '0 0 60%', display: 'flex', justifyContent: 'center'}}>
+                      <PieChart data={wineTypeStats} colors={['#374151', '#2563eb', '#9333ea', '#dc2626', '#059669', '#f59e0b']} size={280} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="stats-box" style={{marginBottom: '1.5rem'}}>
+                  <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Fordeling etter kvalitet</h3>
+                  <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
+                    <div style={{flex: '0 0 40%'}}>
+                      {Object.entries(qualityStats).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])).map((entry, i) => (
+                        <div key={entry[0]} style={{display: 'flex', alignItems: 'center', marginBottom: '0.75rem', fontSize: '0.875rem'}}>
+                          <div style={{width: '14px', height: '14px', background: ['#fbbf24', '#f59e0b', '#f97316', '#ef4444', '#dc2626'][i % 5], marginRight: '0.75rem', borderRadius: '2px', flexShrink: 0}}></div>
+                          <span style={{flex: 1}}>{renderStars(entry[0])}</span>
+                          <span style={{fontWeight: '600', marginLeft: '0.5rem'}}>{entry[1]}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{flex: '0 0 60%', display: 'flex', justifyContent: 'center'}}>
+                      <PieChart data={Object.fromEntries(Object.entries(qualityStats).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])).map(([q, c]) => [renderStars(q), c]))} colors={['#fbbf24', '#f59e0b', '#f97316', '#ef4444', '#dc2626']} size={280} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="stats-box" style={{marginBottom: '1.5rem'}}>
+                  <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Top 20 druer</h3>
+                  <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+                    {Object.entries(grapeStats).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([grape, count]) => (
+                      <div key={grape} style={{padding: '0.5rem', background: '#f3f4f6', borderRadius: '0.375rem', fontSize: '0.875rem'}}>
+                        <div style={{fontWeight: '600'}}>{count}x</div>
+                        <div style={{color: '#6b7280', fontSize: '0.75rem'}}>{grape}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {Object.entries(grapeStats).length > 10 && (
+                    <div style={{marginTop: '1rem', padding: '0.75rem', background: '#f3f4f6', borderRadius: '0.375rem', fontSize: '0.875rem'}}>
+                      <div style={{fontWeight: '600', marginBottom: '0.5rem'}}>Flere druer</div>
+                      {Object.entries(grapeStats).sort((a, b) => b[1] - a[1]).slice(10).map(([grape, count]) => (
+                        <div key={grape} style={{fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem'}}>
+                          <span style={{fontWeight: '600'}}>{count}x</span> {grape}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="stats-box" style={{marginBottom: '1.5rem'}}>
+                  <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Top 10 regioner</h3>
+                  {Object.entries(regionStats).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([region, count]) => (
+                    <div key={region} style={{display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem'}}>
+                      <span>{region}</span>
+                      <span style={{fontWeight: '600'}}>{count}</span>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="stats-box">
-                  <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Fordeling etter kvalitet</h3>
-                  <PieChart data={Object.fromEntries(Object.entries(qualityStats).sort((a, b) => parseFloat(b[0]) - parseFloat(a[0])).map(([q, c]) => [renderStars(q), c]))} colors={['#fbbf24', '#f59e0b', '#f97316', '#ef4444', '#dc2626']} />
+                  <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem'}}>Top 10 land {statsCountryFilter ? '(filtrert)' : ''}</h3>
+                  {Object.entries(statsCountryFilter ? { [statsCountryFilter]: countryStats[statsCountryFilter] || 0 } : countryStats).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([country, count]) => (
+                    <div key={country} style={{display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem'}}>
+                      <span>{country}</span>
+                      <span style={{fontWeight: '600'}}>{count}</span>
+                    </div>
+                  ))}
                 </div>
               </>
             );
