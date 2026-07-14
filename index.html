@@ -134,6 +134,8 @@ function App() {
   const [filterWineType, setFilterWineType] = useState('');
   const [filterQuality, setFilterQuality] = useState('');
   const [filterCountry, setFilterCountry] = useState('');
+  const [filterRegion, setFilterRegion] = useState('');
+  const [filterSubRegion, setFilterSubRegion] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedWine, setSelectedWine] = useState(null);
@@ -257,7 +259,9 @@ function App() {
     const matchesWineType = !filterWineType || w.wineType === filterWineType;
     const matchesQuality = !filterQuality || w.quality === filterQuality;
     const matchesCountry = !filterCountry || w.country === filterCountry;
-    return matchesSearch && matchesWineType && matchesQuality && matchesCountry;
+    const matchesRegion = !filterRegion || w.region === filterRegion;
+    const matchesSubRegion = !filterSubRegion || w.subRegion === filterSubRegion;
+    return matchesSearch && matchesWineType && matchesQuality && matchesCountry && matchesRegion && matchesSubRegion;
   });
 
   const uniqueCountries = [...new Set(wines.map(w => w.country).filter(Boolean))].sort();
@@ -348,11 +352,21 @@ function App() {
                 <option value="country">Land</option>
               </select>
             </div>
-            <select value={filterCountry} onChange={(e) => { setFilterCountry(e.target.value); }} className="form-control form-control-sm mb-3">
-              <option value="">Alle land</option>
-              {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <button onClick={() => { setSearch(''); setFilterWineType(''); setFilterQuality(''); setFilterCountry(''); setSortBy('newest'); }} className="btn-light">Nullstill</button>
+            <div style={{display: 'flex', gap: '0.75rem', flexWrap: 'nowrap', marginTop: '0.75rem'}}>
+              <select value={filterCountry} onChange={(e) => { setFilterCountry(e.target.value); setFilterRegion(''); setFilterSubRegion(''); }} className="form-control form-control-sm">
+                <option value="">Alle land</option>
+                {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <select value={filterRegion} onChange={(e) => { setFilterRegion(e.target.value); setFilterSubRegion(''); }} className="form-control form-control-sm" disabled={!filterCountry}>
+                <option value="">Alle regioner</option>
+                {filterCountry && [...new Set(wines.filter(w => w.country === filterCountry).map(w => w.region).filter(Boolean))].sort().map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <select value={filterSubRegion} onChange={(e) => setFilterSubRegion(e.target.value)} className="form-control form-control-sm" disabled={!filterRegion}>
+                <option value="">Alle underregioner</option>
+                {filterRegion && [...new Set(wines.filter(w => w.country === filterCountry && w.region === filterRegion).map(w => w.subRegion).filter(Boolean))].sort().map(sr => <option key={sr} value={sr}>{sr}</option>)}
+              </select>
+            </div>
+            <button onClick={() => { setSearch(''); setFilterWineType(''); setFilterQuality(''); setFilterCountry(''); setFilterRegion(''); setFilterSubRegion(''); setSortBy('newest'); }} className="btn-light" style={{marginTop: '0.75rem'}}>Nullstill</button>
           </div>
         )}
       </div>
