@@ -218,16 +218,24 @@ function App() {
         ...form
       } : { action: 'add', ...form };
       const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
-      const text = await r.text();
-      let res;
+      
+      let res = null;
       try {
+        const text = await r.text();
+        console.log('Server response:', text);
         res = JSON.parse(text);
-      } catch (e) {
-        console.error('Responsen er ikke gyldig JSON:', text);
-        alert('Respons fra server: ' + text);
-        setSaving(false);
+      } catch (parseError) {
+        console.error('Kunne ikke parse response:', parseError);
+        // Prøv å laste data på nytt for å se om det ble lagret
+        console.log('Laster data på nytt for å sjekke om vinen ble lagret...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await loadData();
+        setShowForm(false);
+        setEditId(null);
+        resetForm();
         return;
       }
+      
       if (res.success) {
         loadData();
         setShowForm(false);
@@ -237,7 +245,8 @@ function App() {
         alert('Feil: ' + res.message);
       }
     } catch (e) {
-      alert('Feil: ' + e.message);
+      console.error('Feil ved lagring:', e);
+      alert('Feil: ' + e.message + '\n\nVinen kan ha blitt lagret allikevel. Lukk dialogboksen og last siden på nytt for å sjekke.');
     }
     finally { setSaving(false); }
   };
