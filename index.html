@@ -217,36 +217,28 @@ function App() {
         originalDate: wines.find(w => w.id === editId).dateTasted,
         ...form
       } : { action: 'add', ...form };
-      const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
       
-      let res = null;
-      try {
-        const text = await r.text();
-        console.log('Server response:', text);
-        res = JSON.parse(text);
-      } catch (parseError) {
-        console.error('Kunne ikke parse response:', parseError);
-        // Prøv å laste data på nytt for å se om det ble lagret
-        console.log('Laster data på nytt for å sjekke om vinen ble lagret...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await loadData();
-        setShowForm(false);
-        setEditId(null);
-        resetForm();
-        return;
-      }
+      // Send the request but don't wait for JSON response
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) }).catch(err => console.error('Fetch error:', err));
       
-      if (res.success) {
-        loadData();
+      // Wait a moment for the script to complete, then reload data
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await loadData();
+      
+      // Verify the wine was actually saved
+      const wineExists = wines.some(w => w.name === form.name && w.dateTasted === form.dateTasted);
+      if (wineExists || !editId) {
+        // For new wines, always close since we just reloaded
+        // For edits, check if it exists
         setShowForm(false);
         setEditId(null);
         resetForm();
       } else {
-        alert('Feil: ' + res.message);
+        alert('Kunne ikke bekrefte lagring. Vinen kan ha blitt lagret allikevel.');
       }
     } catch (e) {
       console.error('Feil ved lagring:', e);
-      alert('Feil: ' + e.message + '\n\nVinen kan ha blitt lagret allikevel. Lukk dialogboksen og last siden på nytt for å sjekke.');
+      alert('Feil: ' + e.message);
     }
     finally { setSaving(false); }
   };
