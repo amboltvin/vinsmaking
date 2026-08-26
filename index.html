@@ -222,20 +222,13 @@ function App() {
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) }).catch(err => console.error('Fetch error:', err));
       
       // Wait a moment for the script to complete, then reload data
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       await loadData();
       
-      // Verify the wine was actually saved
-      const wineExists = wines.some(w => w.name === form.name && w.dateTasted === form.dateTasted);
-      if (wineExists || !editId) {
-        // For new wines, always close since we just reloaded
-        // For edits, check if it exists
-        setShowForm(false);
-        setEditId(null);
-        resetForm();
-      } else {
-        alert('Kunne ikke bekrefte lagring. Vinen kan ha blitt lagret allikevel.');
-      }
+      // Close the form after data has been reloaded
+      setShowForm(false);
+      setEditId(null);
+      resetForm();
     } catch (e) {
       console.error('Feil ved lagring:', e);
       alert('Feil: ' + e.message);
