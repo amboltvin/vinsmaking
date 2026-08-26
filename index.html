@@ -222,7 +222,7 @@ function App() {
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) }).catch(err => console.error('Fetch error:', err));
       
       // Wait a moment for the script to complete, then reload data
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       await loadData();
       
       // Close the form after data has been reloaded
