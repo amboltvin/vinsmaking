@@ -218,12 +218,16 @@ function App() {
         ...form
       } : { action: 'add', ...form };
       
+      console.log('save: Sender request...');
       // Send the request but don't wait for JSON response
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) }).catch(err => console.error('Fetch error:', err));
       
       // Wait a moment for the script to complete, then reload data
+      console.log('save: Venter 1,5 sekund...');
       await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('save: Kaller loadData()...');
       await loadData();
+      console.log('save: loadData() ferdig, lukker dialogboksen');
       
       // Close the form after data has been reloaded
       setShowForm(false);
