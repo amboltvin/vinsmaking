@@ -224,7 +224,7 @@ function App() {
       
       // Wait a moment for the script to complete, then reload data
       // Redigeringer trenger mer tid enn nye oppføringer
-      const waitTime = editId ? 2500 : 1500;
+      const waitTime = editId ? 3500 : 1500;
       console.log('save: Venter', waitTime, 'ms...');
       await new Promise(resolve => setTimeout(resolve, waitTime));
       console.log('save: Kaller loadData()...');
