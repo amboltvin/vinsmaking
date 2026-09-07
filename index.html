@@ -223,8 +223,10 @@ function App() {
       fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) }).catch(err => console.error('Fetch error:', err));
       
       // Wait a moment for the script to complete, then reload data
-      console.log('save: Venter 1,5 sekund...');
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Redigeringer trenger mer tid enn nye oppføringer
+      const waitTime = editId ? 2500 : 1500;
+      console.log('save: Venter', waitTime, 'ms...');
+      await new Promise(resolve => setTimeout(resolve, waitTime));
       console.log('save: Kaller loadData()...');
       await loadData();
       console.log('save: loadData() ferdig, lukker dialogboksen');
