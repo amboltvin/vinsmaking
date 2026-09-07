@@ -180,7 +180,7 @@ function App() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
+      const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&nocache=${Date.now()}`);
       const t = await r.text();
       const j = JSON.parse(t.substring(47).slice(0, -2));
       const ws = j.table.rows.map((row, i) => {
