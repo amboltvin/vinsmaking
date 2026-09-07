@@ -180,6 +180,7 @@ function App() {
   const loadData = async () => {
     setLoading(true);
     try {
+      console.log('loadData: starter...');
       const r = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&nocache=${Date.now()}`);
       const t = await r.text();
       const j = JSON.parse(t.substring(47).slice(0, -2));
@@ -200,8 +201,12 @@ function App() {
           body: row.c[17]?.v || '', taste: row.c[18]?.v || '', length: row.c[19]?.v || '', quality: qualityValue
         };
       });
+      console.log('loadData: Hentet', ws.length, 'viner fra Google Sheets');
+      console.log('loadData: Setter wines med setWines()');
       setWines(ws);
+      console.log('loadData: setWines() kalt, state skulle være oppdatert');
     } catch (e) {
+      console.error('loadData error:', e);
       alert('Feil ved lasting: ' + e.message);
     }
     finally { setLoading(false); }
